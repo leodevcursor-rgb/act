@@ -23,6 +23,9 @@
         return b;
       }
     } catch (e) {}
+    // Em http(s) use sempre a mesma origem (nginx → /api/). Evita base antiga no localStorage.
+    const proto = location.protocol;
+    if (proto === "http:" || proto === "https:") return location.origin;
     try {
       const saved = localStorage.getItem(LS_BASE);
       if (saved) return saved.replace(/\/$/, "");

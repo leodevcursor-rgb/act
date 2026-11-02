@@ -57,7 +57,9 @@ public class SecurityConfig {
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*", "null"));
+    // Inclui IP/domínio do VPS (ex.: http://200.141.20.75:8088), não só localhost
+    config.setAllowedOriginPatterns(
+        List.of("http://localhost:*", "http://127.0.0.1:*", "http://*", "https://*", "null"));
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
     config.setAllowCredentials(true);
