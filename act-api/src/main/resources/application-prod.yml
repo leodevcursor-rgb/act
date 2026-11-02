@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  flyway:
+    enabled: false
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+
+act:
+  jwt:
+    secret: ${ACT_JWT_SECRET}
+
+logging:
+  level:
+    br.com.asa.actsquad: INFO
+    org.springframework.security: WARN

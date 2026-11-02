@@ -1,0 +1,826 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ACT Squad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: caderno de missões em abas — uma aba por herói, cada uma com apresentação, uma missão interativa e o baralho de cartas; resumo final para levar à sessão */
+:root{
+  --paper:#eef3f6; --sheet:#ffffff; --ink:#1b2440; --muted:#5a6684; --line:#d3dce6;
+  --aki:#2f6fd0; --cole:#d43f7f; --de:#c98a12; --lea:#3f8a4e; --val:#d4612a; --vai:#7b52c7;
+  --hero:var(--ink); --hero-soft:#e6ebf3;
+  --display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11172a; --sheet:#1a2238; --ink:#e7ecf7; --muted:#a2adc8; --line:#2c3652;
+  --aki:#6aaeff; --cole:#f585b6; --de:#f0c050; --lea:#7fcf8c; --val:#ff9a66; --vai:#b496ff;
+  --hero-soft:#232c46; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11172a; --sheet:#1a2238; --ink:#e7ecf7; --muted:#a2adc8; --line:#2c3652;
+  --aki:#6aaeff; --cole:#f585b6; --de:#f0c050; --lea:#7fcf8c; --val:#ff9a66; --vai:#b496ff;
+  --hero-soft:#232c46; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+.wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:20px 56px}
+[data-h="AKI"]{--hero:var(--aki)} [data-h="COLE"]{--hero:var(--cole)} [data-h="DE"]{--hero:var(--de)}
+[data-h="LEA"]{--hero:var(--lea)} [data-h="VAL"]{--hero:var(--val)} [data-h="VAI"]{--hero:var(--vai)}
+
+header.top{display:flex;flex-direction:column;gap:6px;padding-block:6px 16px}
+.brand{width:120px;height:auto;margin-bottom:6px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(36px,9vw,56px);line-height:1;margin:0;letter-spacing:-.01em}
+h1 .sq{display:inline-flex;gap:2px}
+h1 .sq span:nth-child(1){color:var(--aki)} h1 .sq span:nth-child(2){color:var(--cole)} h1 .sq span:nth-child(3){color:var(--de)}
+h1 .sq span:nth-child(4){color:var(--lea)} h1 .sq span:nth-child(5){color:var(--val)}
+.sub{font-family:var(--display);font-weight:600;font-size:22px;color:var(--muted);line-height:1.2}
+h2{font-family:var(--display);font-weight:700;font-size:28px;line-height:1.15;margin:0;text-wrap:balance}
+h3{font-family:var(--display);font-weight:700;font-size:20px;line-height:1.2;margin:0}
+p{margin:0;max-width:65ch}
+.lede{color:var(--muted);font-size:17px}
+.note{font-size:14px;color:var(--muted)}
+
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);margin-inline:-16px;padding:8px 16px;border-bottom:1px solid var(--line);overflow-x:auto;display:flex;gap:6px;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:2px solid var(--line);background:var(--sheet);color:var(--ink);font:inherit;font-family:var(--display);font-weight:700;font-size:15px;padding:4px 14px;border-radius:999px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.tab .dot{width:10px;height:10px;border-radius:50%;background:var(--hero)}
+.tab[aria-selected="true"]{background:var(--hero);border-color:var(--hero);color:var(--sheet)}
+.tab[aria-selected="true"] .dot{background:var(--sheet)}
+:is(button,input,textarea,select):focus-visible{outline:3px solid var(--hero);outline-offset:2px}
+
+section.panel{display:flex;flex-direction:column;gap:18px;padding-top:24px}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+/* Squad grid */
+.squad{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.hcard{border:0;cursor:pointer;text-align:left;font:inherit;color:var(--ink);background:var(--sheet);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:6px;border-top:6px solid var(--hero);box-shadow:0 1px 0 var(--line)}
+.hcard:hover{transform:translateY(-2px)} @media (prefers-reduced-motion:reduce){.hcard:hover{transform:none}}
+.hcard b{font-family:var(--display);font-size:24px;line-height:1;color:var(--hero)}
+.hcard .pr{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.hcard .pw{font-size:14px}
+.hcard .prog{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.badge{width:64px;height:64px;flex:0 0 auto}
+.badge .bg{fill:var(--hero)} .badge .fg{fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round} .badge .ff{fill:var(--sheet)}
+
+/* Hero intro */
+.intro{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;background:var(--hero-soft);border-radius:18px;padding:18px;border:2px solid var(--hero)}
+.intro .badge{width:92px;height:92px}
+.intro .who{display:flex;flex-direction:column;gap:4px;min-width:0}
+.intro .name{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:var(--hero)}
+.intro .proc{font-size:13px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.intro .motto{font-family:var(--display);font-weight:600;font-size:19px;line-height:1.25}
+@media(max-width:460px){.intro{grid-template-columns:1fr}.intro .badge{width:72px;height:72px}}
+
+/* Forms */
+label.field{display:flex;flex-direction:column;gap:5px}
+label.field b{font-size:15px}
+label.field small{font-size:13px;color:var(--muted)}
+textarea,input[type=text]{width:100%;font:inherit;font-size:15px;line-height:1.5;padding:9px 12px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink)}
+textarea{min-height:72px;resize:vertical}
+::placeholder{color:var(--muted);opacity:.8;font-style:italic}
+.row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:14px;padding:6px 12px;border-radius:999px;border:2px solid var(--line);background:var(--sheet);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--hero);border-color:var(--hero);color:var(--sheet);font-weight:700}
+.btn{font:inherit;font-family:var(--display);font-weight:700;font-size:16px;padding:8px 18px;border-radius:999px;border:2px solid var(--hero);background:var(--hero);color:var(--sheet);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.danger{background:transparent;color:var(--vai);border-color:var(--vai)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* 54321 */
+.senses{display:flex;flex-direction:column;gap:10px}
+.sense{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;align-items:start}
+.sense .n{font-family:var(--display);font-weight:800;font-size:28px;line-height:1;color:var(--hero);text-align:center;padding-top:6px}
+/* DE machine */
+.machine{border:2px dashed var(--hero);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.screen{font-size:18px;line-height:1.45;min-height:60px;padding:12px;border-radius:10px;background:var(--hero-soft);word-break:break-word}
+.screen.robot{font-family:ui-monospace,Menlo,monospace;text-transform:uppercase;letter-spacing:.06em}
+.screen.slow{letter-spacing:.35em}
+.screen.tiny{font-size:12px}
+
+/* body map */
+.bodymap{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:16px;align-items:start}
+.bodymap svg{width:100%;height:auto}
+.bodymap .part{fill:var(--hero-soft);stroke:var(--ink);stroke-width:1.5;cursor:pointer}
+.bodymap .part.on{fill:var(--hero)}
+@media(max-width:460px){.bodymap{grid-template-columns:110px minmax(0,1fr)}}
+/* lenses */
+.lenses{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.lens{display:flex;flex-direction:column;gap:6px;border-radius:14px;padding:12px;background:var(--hero-soft)}
+.lens h4{margin:0;font-family:var(--display);font-size:17px}
+/* steps */
+.thermo{display:flex;gap:6px}
+.thermo button{flex:1;font:inherit;font-weight:700;padding:8px 0;border-radius:10px;border:2px solid var(--line);background:var(--sheet);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.thermo button[aria-pressed="true"]{background:var(--hero);border-color:var(--hero);color:var(--sheet)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.done{display:flex;align-items:center;gap:10px;font-weight:700}
+.done input{width:22px;height:22px;accent-color:var(--hero)}
+
+/* cards deck */
+.deckhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+.count{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.deck{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{background:var(--sheet);border:2px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card.got{border-color:var(--hero)}
+.card .meta{display:flex;justify-content:space-between;gap:6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.card b{font-family:var(--display);font-size:18px;line-height:1.2}
+.card p{font-size:14px;flex:1}
+.card .got-btn{align-self:flex-start;font:inherit;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px;border:2px solid var(--hero);background:transparent;color:var(--ink);cursor:pointer}
+.card.got .got-btn{background:var(--hero);color:var(--sheet)}
+
+.portrait{width:120px;height:150px;object-fit:cover;object-position:top;border-radius:14px;border:3px solid var(--hero);background:var(--sheet)}
+.hcard .portrait{width:100%;height:150px;border-width:0}
+@media(max-width:460px){.intro .portrait{width:100%;height:220px}}
+.wide{width:100%;height:auto;border-radius:14px;border:1px solid var(--line);display:block}
+.card .art{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;display:block;background:var(--hero-soft)}
+.card .verso{display:flex;flex-direction:column;gap:6px;font-size:14px;padding:10px;border-radius:10px;background:var(--hero-soft)}
+.card .verso.framed{aspect-ratio:1/1;justify-content:center;gap:4px;font-size:clamp(11px,3.2vw,13px);line-height:1.35;color:#2a2230;background-size:100% 100%;background-color:transparent;padding:27% 12% 30%;overflow:auto}
+.card .verso.framed i{font-size:clamp(12px,3.4vw,14px)}
+.card .verso.framed small{color:#6b5d6e}
+.card .verso i{font-family:var(--display);font-style:normal;font-weight:600;font-size:16px;line-height:1.3}
+.card .verso small{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.card .btns{display:flex;flex-wrap:wrap;gap:6px}
+.flip{font:inherit;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.pend{font-size:12px;color:var(--muted);font-style:italic}
+
+/* card viewer (tela cheia) */
+.viewer{position:fixed;inset:0;z-index:20;background:rgba(10,14,28,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 12px)}
+.viewer[hidden]{display:none!important}
+.viewer{--w:min(520px,calc(100vw - 32px))}
+.viewer{--w:min(400px,calc(100vw - 32px),calc((100dvh - 110px)/1.45))}
+.big{width:var(--w);height:calc(var(--w)*1.45);border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.face{width:100%;height:100%;box-sizing:border-box;border-style:solid;border-image-repeat:stretch;color:#2a2230}
+.face.front{border-width:0 0 calc(var(--w)*.45) 0;border-image-slice:30% 0 31% 0 fill}
+.face.front img{width:100%;height:100%;object-fit:cover;display:block}
+.face.back{border-width:calc(var(--w)*.30) calc(var(--w)*.105) calc(var(--w)*.27);border-image-slice:30% 12% 31% fill;overflow:hidden}
+.face.back .sc{height:100%;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:0 2px 10px;scrollbar-width:thin}
+.face.back .sc.more{-webkit-mask-image:linear-gradient(#000 82%,transparent);mask-image:linear-gradient(#000 82%,transparent)}
+.face.back .id{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#7a6c7d}
+.face.back h4{margin:-3px 0 0;font-family:var(--display);font-weight:800;font-size:clamp(19px,5.4vw,23px);line-height:1.1;color:#2a2230;text-wrap:balance}
+.face.back .ab{font-size:clamp(13.5px,3.75vw,15.5px);line-height:1.38;font-style:italic;color:#463a4a}
+.face.back .lab{align-self:flex-start;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#2a2230;background:rgba(42,34,48,.08);padding:3px 9px;border-radius:999px;margin-top:2px}
+.face.back .ex{font-size:clamp(13.5px,3.75vw,15.5px);line-height:1.4}
+.face.back .q{font-family:var(--display);font-weight:700;font-size:clamp(15px,4.2vw,17px);line-height:1.25;border-top:1.5px dashed rgba(42,34,48,.25);padding-top:9px;margin-top:2px}
+.face.back .pend{font-size:15px;color:#7a6c7d}
+.vbar{display:flex;gap:8px;align-items:center;justify-content:center;width:var(--w)}
+.vbar .btn{font-size:15px;padding:7px 16px}
+.vbar .nav{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.vbar .pos{color:#fff;font-size:13px;font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
+.card .art{cursor:zoom-in}
+.names{display:flex;flex-direction:column;gap:10px}
+.nm{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:start;padding:10px 0;border-top:1px dashed var(--line)}
+.nm .nh{font-family:var(--display);font-weight:800;font-size:24px;line-height:1;color:var(--hero)}
+.nm .stack{gap:2px}
+.nm i{font-family:var(--display);font-style:normal;font-weight:700;color:var(--hero)}
+.mx{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.mxq{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:14px;background:var(--hero-soft);border:2px solid var(--hero);min-width:0}
+.mxq b{font-family:var(--display);font-size:16px;line-height:1.15;color:var(--hero)}
+.mxq small{font-size:12px;line-height:1.35;color:var(--muted)}
+.mxq textarea{min-height:44px;font-size:14px;padding:6px 8px;background:var(--sheet)}
+.mxq.tl,.mxq.bl{border-style:dashed}
+.mxc{grid-column:1 / -1;display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:999px;border:2px solid var(--hero);background:var(--sheet);text-align:center;align-items:center}
+.mxc b{font-family:var(--display);color:var(--hero)}
+.mxc textarea{min-height:40px;max-width:420px;text-align:center;border-radius:999px;font-size:14px}
+.mxax{display:flex;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mxq.tl,.mxq.tr{order:1}.mxc{order:2}.mxq.bl,.mxq.br{order:3}.mxq.lea{order:4;grid-column:1 / -1}
+/* integration */
+.trail{display:flex;flex-direction:column;gap:0}
+.trail .stepx{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.trail .stepx:last-child{border-bottom:0}
+.trail .badge{width:52px;height:52px}
+.trail b{font-family:var(--display);color:var(--hero);font-size:17px}
+
+pre.summary{white-space:pre-wrap;word-break:break-word;font-family:var(--body);font-size:14px;line-height:1.55;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0;max-height:460px;overflow:auto}
+.confirm{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;border:2px solid var(--vai);border-radius:12px}
+.adults{border-left:4px solid var(--line);padding-left:14px}
+footer{margin-top:40px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:no-preference){.panel{animation:in .25s ease-out}@keyframes in{from{transform:translateY(5px)}to{transform:none}}}
+
+/* Login, pacientes e conta */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.authview,.pacview,.pbar{--hero:var(--aki)}
+#bootMsg{display:none}
+html.booting #authView{display:none}
+html.booting #bootMsg{display:flex;position:fixed;inset:0;z-index:40;align-items:center;justify-content:center;background:var(--paper);color:var(--muted);font-family:var(--display);font-weight:700;font-size:20px}
+.authview{position:fixed;inset:0;z-index:30;overflow:auto;background:var(--paper);display:flex;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 24px) 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
+.authbox{width:100%;max-width:440px;margin:auto;display:flex;flex-direction:column;gap:14px}
+.authbox .brand{width:120px;margin:0}
+.authbadges{display:flex;gap:8px;flex-wrap:wrap}
+.authbadges .badge{width:38px;height:38px}
+.authcard{background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.authcard form{display:flex;flex-direction:column;gap:12px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.inp{width:100%;font:inherit;font-size:15px;line-height:1.5;padding:9px 12px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink)}
+select.inp{appearance:auto;cursor:pointer}
+.msg{font-size:14px;line-height:1.45;padding:8px 12px;border-radius:10px;background:var(--hero-soft);border-left:4px solid var(--line)}
+.msg.err{border-left-color:var(--cole)}
+.msg.ok{border-left-color:var(--lea)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.sm{font-size:14px;padding:4px 14px}
+.pbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+#pacSelWrap{flex:1 1 180px;min-width:0;max-width:300px;display:block}
+.pbar select{padding:5px 10px;font-size:14px}
+.pbar.busy{opacity:.6;pointer-events:none}
+.plink{font:inherit;font-family:var(--display);font-weight:700;font-size:14px;line-height:1.5;padding:2px 12px;border-radius:999px;border:2px solid var(--line);background:var(--sheet);color:var(--ink);text-decoration:none;cursor:pointer;display:inline-flex;align-items:center}
+.plink:hover{border-color:var(--hero)}
+.plink[aria-current="page"]{background:var(--hero);border-color:var(--hero);color:var(--sheet)}
+:is(a.plink,button.plink):focus-visible{outline:3px solid var(--hero);outline-offset:2px}
+.pacview{display:flex;flex-direction:column;gap:18px;padding-top:20px}
+.psub{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.plist{display:flex;flex-direction:column;gap:10px;list-style:none;margin:0;padding:0}
+.pitem{border:2px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:var(--sheet)}
+.pitem.cur{border-color:var(--hero)}
+.pitem .ph{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.pitem .pn{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.2;word-break:break-word}
+.pitem .pnote{font-size:14px;color:var(--muted)}
+.tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--hero-soft);color:var(--muted)}
+.tag.on{background:var(--hero);color:var(--sheet)}
+.termsbox{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:12px;background:var(--paper);border:1px solid var(--line);font-size:15px}
+.termsbox ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;margin:0}
+.kv dt{font-weight:700;color:var(--muted);font-size:14px}
+.kv dd{margin:0;word-break:break-word}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-AKI" viewBox="0 0 64 64"><circle style="fill:var(--hero)" cx="32" cy="32" r="30"/><circle style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" cx="32" cy="34" r="6"/><path style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" d="M20 22a17 17 0 0 1 24 0M14 16a25 25 0 0 1 36 0"/><path style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" d="M32 40v10M26 50h12"/></symbol>
+    <symbol id="i-COLE" viewBox="0 0 64 64"><circle style="fill:var(--hero)" cx="32" cy="32" r="30"/><path style="fill:var(--sheet)" d="M32 48s-13-8-13-17a7 7 0 0 1 13-3.5A7 7 0 0 1 45 31c0 9-13 17-13 17z"/><path style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" d="M32 22V12M26 14a8 8 0 0 1 12 0"/></symbol>
+    <symbol id="i-DE" viewBox="0 0 64 64"><circle style="fill:var(--hero)" cx="32" cy="32" r="30"/><rect style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" x="16" y="20" width="32" height="24" rx="6"/><path style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" d="M22 30h8M22 36h14"/><circle style="fill:var(--sheet)" cx="42" cy="30" r="3"/><path style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" d="M26 14l6 6 6-6"/></symbol>
+    <symbol id="i-LEA" viewBox="0 0 64 64"><circle style="fill:var(--hero)" cx="32" cy="32" r="30"/><circle style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" cx="22" cy="32" r="8"/><circle style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" cx="42" cy="32" r="8"/><path style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" d="M30 32h4M14 30l-2-4M50 30l2-4"/></symbol>
+    <symbol id="i-VAL" viewBox="0 0 64 64"><circle style="fill:var(--hero)" cx="32" cy="32" r="30"/><circle style="fill:none;stroke:var(--sheet);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" cx="32" cy="32" r="16"/><path style="fill:var(--sheet)" d="M32 19l5 13-5 13-5-13z"/><circle style="fill:var(--hero)" cx="32" cy="32" r="2.5"/></symbol>
+    <symbol id="i-VAI" viewBox="0 0 64 64"><circle style="fill:var(--hero)" cx="32" cy="32" r="30"/><ellipse style="fill:var(--sheet)" cx="24" cy="40" rx="5" ry="7"/><ellipse style="fill:var(--sheet)" cx="40" cy="26" rx="5" ry="7"/><circle style="fill:var(--sheet)" cx="22" cy="31" r="1.8"/><circle style="fill:var(--sheet)" cx="27" cy="31.5" r="1.8"/><circle style="fill:var(--sheet)" cx="38" cy="17" r="1.8"/><circle style="fill:var(--sheet)" cx="43" cy="17.5" r="1.8"/></symbol>
+  </defs>
+</svg>
+
+<script src="api.js"></script>
+<script>if(window.ActSquadApi&&ActSquadApi.loggedIn())document.documentElement.classList.add('booting');</script>
+<div id="bootMsg" role="status">Carregando…</div>
+
+<div class="authview" id="authView">
+  <div class="authbox">
+    <img class="brand" src="img/logo-asa.png" alt="Espaço ASA – Aprendizagem Sócio Afetiva" width="600" height="182">
+    <div class="stack" style="gap:6px">
+      <span class="eyebrow">Caderno de missões · ACT para crianças</span>
+      <h1><span class="sq"><span>A</span><span>C</span><span>T</span></span> Squad</h1>
+      <span class="sub">Heróis da ACT rumo aos valores</span>
+    </div>
+    <div class="authbadges" id="authBadges" aria-hidden="true"></div>
+    <div class="authcard" id="authFormBox">
+      <div class="seg" role="tablist" aria-label="Entrar ou criar conta">
+        <button type="button" class="tab" role="tab" id="authTabLogin" data-auth="login" aria-selected="true">Entrar</button>
+        <button type="button" class="tab" role="tab" id="authTabReg" data-auth="register" aria-selected="false">Criar conta</button>
+      </div>
+      <h2 id="authTitle">Entrar</h2>
+      <p class="note" id="authLede">Use seu e-mail e senha para abrir o caderno e os pacientes da sua conta.</p>
+      <form id="authForm" novalidate>
+        <label class="field" id="authNameWrap" hidden><b>Seu nome</b><input class="inp" type="text" id="authName" autocomplete="name" maxlength="120" placeholder="Como quer ser chamado(a)"></label>
+        <label class="field"><b>E-mail</b><input class="inp" type="email" id="authEmail" autocomplete="username" inputmode="email" required placeholder="voce@exemplo.com"></label>
+        <label class="field"><b>Senha</b><input class="inp" type="password" id="authPass" autocomplete="current-password" required minlength="8" placeholder="Mínimo de 8 caracteres"><small id="authPassHint" hidden>Use pelo menos 8 caracteres.</small></label>
+        <div class="msg err" id="authErr" role="alert" hidden></div>
+        <div class="actions"><button class="btn" type="submit" id="authSubmit">Entrar</button></div>
+      </form>
+    </div>
+    <p class="note">Este caderno apoia a terapia e não a substitui. © Priscila Tenenbaum · Espaço ASA</p>
+  </div>
+</div>
+
+<div class="wrap" id="wrap" hidden>
+  <header class="top">
+    <img class="brand" src="img/logo-asa.png" alt="Espaço ASA – Aprendizagem Sócio Afetiva" width="600" height="182">
+    <span class="eyebrow">Caderno de missões · Terapia de Aceitação e Compromisso para crianças</span>
+    <h1><span class="sq"><span>A</span><span>C</span><span>T</span></span> Squad</h1>
+    <span class="sub">Heróis da ACT rumo aos valores</span>
+    <div class="pbar" id="pbar" hidden>
+      <label id="pacSelWrap"><span class="sr">Paciente atual</span><select class="inp" id="pacSel" aria-label="Paciente atual"></select></label>
+      <a class="plink" id="lnkPac" href="#pacientes">Pacientes</a>
+      <a class="plink" id="lnkConta" href="#conta">Conta</a>
+      <button class="plink" type="button" id="btnSair">Sair</button>
+    </div>
+  </header>
+
+  <section class="pacview" id="pacView" aria-label="Pacientes e conta" hidden>
+    <div class="psub" id="psub">
+      <a class="plink" data-sub="pacientes" href="#pacientes">Pacientes</a>
+      <a class="plink" data-sub="conta" href="#conta">Conta</a>
+      <a class="plink" data-sub="termos" href="#termos">Termos</a>
+      <button class="btn sm" type="button" id="btnVoltar">← Voltar ao caderno</button>
+    </div>
+
+    <div class="sheet" id="termsBox" hidden>
+      <h2>Termos de uso e privacidade</h2>
+      <p class="note" id="termsVer"></p>
+      <div class="termsbox">
+        <ul>
+          <li>O ACT Squad é um caderno de apoio à terapia. Ele não substitui o acompanhamento profissional.</li>
+          <li>As respostas ficam salvas na sua conta, separadas por paciente, e só aparecem depois do login.</li>
+          <li>Use apelidos ou iniciais como nome do paciente. Evite sobrenome, escola, endereço e outros dados que identifiquem a criança.</li>
+          <li>Você é responsável pelo uso das informações dos seus pacientes, conforme o sigilo profissional e a LGPD.</li>
+          <li>Ao excluir um paciente, todas as respostas dele são apagadas e não dá para recuperar.</li>
+        </ul>
+      </div>
+      <div class="msg err" id="termsErr" role="alert" hidden></div>
+      <label class="done" id="termsChkWrap"><input type="checkbox" id="termsChk"> Li e aceito os termos.</label>
+      <p class="note" id="termsDone" hidden></p>
+      <div class="actions"><button class="btn" type="button" id="termsBtn" disabled>Aceitar e continuar</button></div>
+    </div>
+
+    <div class="sheet" id="patBox" hidden>
+      <h2>Pacientes</h2>
+      <p class="note">Cada paciente tem o seu próprio caderno. Use apelido ou iniciais. Escolha um para abrir.</p>
+      <div class="msg err" id="patErr" role="alert" hidden></div>
+      <ul class="plist" id="patList"></ul>
+      <form class="stack" id="patForm" novalidate>
+        <h3>Novo paciente</h3>
+        <div class="row2">
+          <label class="field"><b>Nome ou apelido</b><input class="inp" type="text" id="patName" maxlength="60" required placeholder="Ex.: Bia"></label>
+          <label class="field"><b>Observação</b><small>Opcional, até 120 letras.</small><input class="inp" type="text" id="patNote" maxlength="120" placeholder="Ex.: terças, 15h"></label>
+        </div>
+        <div class="actions"><button class="btn" type="submit" id="patAdd">Adicionar paciente</button></div>
+      </form>
+    </div>
+
+    <div class="sheet" id="contaBox" hidden>
+      <h2>Conta</h2>
+      <dl class="kv" id="contaKv"></dl>
+      <div class="actions"><button class="btn danger" type="button" id="btnSair2">Sair da conta</button></div>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Seções do caderno" id="tabs"></nav>
+  <main id="panels"></main>
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Carta ampliada" hidden>
+    <div class="big" id="vbig"></div>
+    <div class="vbar"><button class="btn nav" id="vprev" aria-label="Carta anterior">‹</button><button class="btn" id="vflip">Virar</button><span class="pos" id="vpos"></span><button class="btn nav" id="vnext" aria-label="Próxima carta">›</button><button class="btn nav" id="vclose" aria-label="Fechar">✕</button></div>
+  </div>
+
+  <footer>
+    <span id="savestate" role="status" aria-live="polite">Suas respostas ficam salvas na sua conta, separadas por paciente.</span>
+    <span>© Priscila Tenenbaum · Espaço ASA · Cartas inspiradas no ACT Matrix (K. Polk, B. Schoendorff e col.), em Russ Harris e na Bússola Clínica ACT do Espaço ASA. Este caderno apoia a terapia e não a substitui.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+const KEY='act-squad-v1';
+const CARDS={"AKI": [{"id": "AKI-01", "t": "Respira AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-01.webp", "v": ["Sua respiração pode ser um ponto de encontro com o agora.", "Durante um minuto, perceba o ar entrando e saindo. Não precisa respirar de um jeito especial. Quando a atenção viajar, note para onde foi e volte gentilmente à próxima respiração.", "Como você percebeu que sua atenção tinha se afastado?"]}, {"id": "AKI-02", "t": "Olhos AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-02.webp", "v": ["Olhar com curiosidade é diferente de apenas passar os olhos.", "Escolha um objeto próximo. Observe-o como se nunca o tivesse visto: contornos, cores, luz, sombras e pequenos detalhes. Depois amplie o olhar para tudo ao redor.", "Que detalhe novo apareceu quando você realmente olhou?"]}, {"id": "AKI-03", "t": "Escuta AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-03.webp", "v": ["Os sons podem ajudar você a perceber o lugar onde está.", "Por alguns instantes, escute sem procurar um som certo. Perceba primeiro um som distante e depois um som próximo. Note também os intervalos de silêncio, se houver. Você pode manter os olhos abertos.", "Qual som estava aí o tempo todo e você ainda não tinha notado?"]}, {"id": "AKI-04", "t": "Toque AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-04.webp", "v": ["Suas mãos podem descobrir muito sobre o presente.", "Segure um objeto seguro e confortável. Explore sua textura, peso, temperatura e formato. Perceba a pressão dos dedos e os pontos de contato. Se a mente se distrair, volte à sensação do toque.", "Qual característica do objeto foi mais fácil perceber com as mãos?"]}, {"id": "AKI-05", "t": "Cheiro AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-05.webp", "v": ["Um cheiro pode trazer sua atenção de volta ao ambiente.", "Escolha um aroma suave e seguro que esteja por perto, sem precisar aproximá-lo do nariz. Perceba se é intenso ou discreto, familiar ou novo. Observe como a experiência muda de uma respiração para outra.", "O que você notou no aroma antes de dar a ele um nome?"]}, {"id": "AKI-06", "t": "Sabor AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-06.webp", "v": ["Uma pequena mordida pode se transformar em uma grande descoberta.", "Se for adequado para você, escolha um alimento que possa comer com segurança. Observe sua aparência e seu cheiro. Dê uma mordida pequena e perceba textura, temperatura e sabor antes de engolir. Não há pressa.", "O sabor mudou enquanto você prestava atenção?"]}, {"id": "AKI-07", "t": "Corpo AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-07.webp", "v": ["Seu corpo está sempre contando o que sente. Dá para escutar.", "Note tensão, relaxamento e sensações presentes no corpo.", "Em que parte do corpo você notou mais coisa?"], "draft": 1}, {"id": "AKI-08", "t": "Caminha AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-08.webp", "v": ["Andar devagar transforma um caminho comum numa descoberta.", "Caminhe lentamente percebendo pés, pernas e movimento.", "O que seus pés perceberam que você nunca tinha notado?"], "draft": 1}, {"id": "AKI-09", "t": "5-4-3-2-1 AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-09.webp", "v": ["Cinco sentidos, cinco portas para voltar ao agora.", "Nomeie 5 coisas que vê, 4 que ouve, 3 que sente, 2 cheiros e 1 sabor.", "Qual sentido foi mais fácil de usar? E o mais difícil?"], "draft": 1}, {"id": "AKI-10", "t": "Piloto Automático", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-10.webp", "v": ["Às vezes o corpo está aqui e a cabeça foi passear.", "Perceba quando seu corpo está fazendo uma coisa enquanto sua atenção está em outro lugar. Note: onde estou agora?", "Quando o piloto automático mais aparece no seu dia?"], "draft": 1}, {"id": "AKI-11", "t": "PAUSA", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-11.webp", "v": ["Uma pausa pequena cria espaço para escolher melhor.", "Pare por alguns segundos. Note o corpo, o que está ao redor e o que sua mente está fazendo. Depois escolha o próximo movimento.", "O que você escolheu fazer depois da pausa?"], "draft": 1}, {"id": "AKI-12", "t": "Dois Canais", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-12.webp", "v": ["Tem o que chega pelos sentidos e tem o que a mente inventa por cima.", "Pergunte: o que está chegando pelos meus sentidos agora? E o que minha mente está acrescentando? Observe os dois canais.", "O que veio dos sentidos e o que veio da mente?"], "draft": 1}, {"id": "AKI-13", "t": "Radar AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-13.webp", "v": ["O radar do AKI capta tudo ao mesmo tempo, sem escolher nada especial.", "Sem procurar nada especial, abra sua atenção: perceba ao mesmo tempo algo que vê, algo que ouve e uma sensação no corpo.", "Qual foi a coisa mais inesperada que o seu radar captou?"], "draft": 1}, {"id": "AKI-14", "t": "Volta pra AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-14.webp", "v": ["A atenção foge. Isso é normal. O treino é trazer de volta.", "Percebeu que sua atenção foi embora? Não precisa brigar com ela. Note para onde foi e gentilmente volte para o que está fazendo agora.", "Para onde sua atenção costuma fugir?"], "draft": 1}, {"id": "AKI-15", "t": "Zoom AKI", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-15.webp", "v": ["Dá para olhar bem de perto ou bem de longe. Você escolhe.", "Escolha algo e aproxime o foco nos pequenos detalhes. Depois abra o foco para perceber a cena inteira. Alterne algumas vezes.", "O que você só viu quando chegou bem perto?"], "draft": 1}, {"id": "AKI-16", "t": "Atenção de lanterna", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-16.webp", "v": ["Sua atenção funciona como uma lanterna: ilumina um pedaço de cada vez.", "Escolha um detalhe para iluminar com a atenção por dez segundos. Depois amplie o foco para toda a cena. Repita e perceba que você pode escolher onde olhar.", "Onde você escolheu apontar sua lanterna?"], "draft": 1}, {"id": "AKI-17", "t": "Um minuto de chegada", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-17.webp", "v": ["Chegar de verdade em um lugar ajuda a fazer melhor o que vem depois.", "Antes de começar uma atividade, sinta os pés no chão, observe o ambiente e escolha onde colocar sua atenção nos próximos minutos.", "Como foi começar a atividade depois de chegar?"], "draft": 1}, {"id": "AKI-18", "t": "Nomeie o agora", "k": "Momento presente", "a": "8+", "img": "img/aki/AKI-18.webp", "v": ["Dar nome ao agora ajuda a ficar nele.", "Diga silenciosamente: 'Agora estou aqui, fazendo isto'. Observe o que vê, ouve e sente. Volte ao que está fazendo, mesmo que a mente comente.", "O que você notou quando nomeou o agora?"], "draft": 1}], "COLE": [{"id": "COLE-01", "t": "Surfando as ondas", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-01.webp", "v": ["Sentimentos vêm como ondas: sobem, ficam fortes e depois baixam.", "Pensamentos e sentimentos difíceis vêm como ondas; pratique atravessá-los sem fazê-los desaparecer.", "O que ajudou você a atravessar a onda?"], "draft": 1}, {"id": "COLE-02", "t": "Não sinta isso!", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-02.webp", "v": ["Tentar não sentir costuma deixar o sentimento maior.", "Experimente tentar impedir uma emoção e observe se controle total é possível.", "O que aconteceu quando você tentou não sentir?"], "draft": 1}, {"id": "COLE-03", "t": "Solte a corda", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-03.webp", "v": ["Num cabo de guerra com o medo, ninguém ganha. Dá para largar a corda.", "Lutar com medo/raiva vira cabo de guerra; experimente largar a corda.", "O que mudou quando você soltou a corda?"], "draft": 1}, {"id": "COLE-04", "t": "Mãe Gato", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-04.webp", "v": ["Um sentimento difícil pode ser cuidado como um gatinho assustado.", "Imagine sua dor como um gatinho assustado: do que precisa e como você quer tratá-lo?", "Do que o seu 'gatinho' precisava hoje?"], "draft": 1}, {"id": "COLE-05", "t": "Acolher o que sinto", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-05.webp", "v": ["Sentimentos são visitas. Podem entrar, ficar um pouco e ir embora.", "Perceba a emoção e permita que esteja aí enquanto segue na direção do que importa.", "Que visita chegou hoje? Como você a recebeu?"], "draft": 1}, {"id": "COLE-06", "t": "Onde mora no corpo?", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-06.webp", "v": ["Todo sentimento mora em algum lugar do corpo.", "Perceba a emoção e encontre onde ela aparece no corpo. Coloque a mão sobre esse lugar e observe o que acontece.", "Onde o sentimento estava? Mudou depois que você pôs a mão?"], "draft": 1}, {"id": "COLE-07", "t": "Mão que acolhe", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-07.webp", "v": ["Uma mão carinhosa ajuda o corpo a se acalmar.", "Perceba a emoção no corpo. Imagine uma mão acolhedora e sinta esse calor se espalhando da mão para a região onde a emoção está.", "Como o corpo respondeu ao calor da sua mão?"], "draft": 1}, {"id": "COLE-08", "t": "Do coração para o mundo", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-08.webp", "v": ["O coração consegue mandar carinho para longe, até quando está bravo.", "Imagine enviar bondade do coração para outras pessoas e para o mundo. Reconheça a raiva e experimente desejar segurança e bem-estar para si e para os outros.", "Para quem você mandou carinho? Como se sentiu?"], "draft": 1}, {"id": "COLE-09", "t": "Se a emoção fosse uma coisa…", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-09.webp", "v": ["Às vezes é mais fácil olhar um sentimento quando ele vira uma coisa.", "Perceba a emoção. Se ela fosse um objeto ou uma coisa, como seria? Dura ou macia? Quente ou fria? Observe o efeito de descrevê-la assim.", "Que coisa o seu sentimento virou?"], "draft": 1}, {"id": "COLE-10", "t": "Nuvem de acolhimento", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-10.webp", "v": ["Sentimentos também precisam de um lugar seguro para ficar.", "Imagine suas emoções como nuvens que podem ir para um lugar especial onde se sintam seguras. Observe como seria esse lugar e o que o tornaria acolhedor.", "Como era o lugar seguro que você imaginou?"], "draft": 1}, {"id": "COLE-11", "t": "Gentileza pelos olhos", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-11.webp", "v": ["Um olhar gentil pode fazer bem para quem está triste.", "Perceba a emoção de outra pessoa. Com o olhar, experimente enviar gentileza e observe o efeito disso nela e em você.", "O que você percebeu no outro quando olhou com gentileza?"], "draft": 1}, {"id": "COLE-12", "t": "Respira através do sentir", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-12.webp", "v": ["A respiração pode abrir espaço em volta do que você sente.", "Perceba a emoção. Respire em direção a ela e imagine a respiração entrando e circulando ao redor da sensação. Observe o que acontece.", "O que aconteceu com o sentimento quando você respirou nele?"], "draft": 1}, {"id": "COLE-13", "t": "Abra espaço", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-13.webp", "v": ["Quando o corpo abre espaço, o sentimento aperta menos.", "Localize a emoção no corpo e imagine que seu corpo fica maior ao redor dela, criando espaço suficiente para que a sensação possa estar presente.", "O sentimento ficou menor, maior ou do mesmo tamanho?"], "draft": 1}, {"id": "COLE-14", "t": "Cinco sentimentos humanos", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-14.webp", "v": ["Sentir muitas coisas ao mesmo tempo faz parte de ser gente.", "Pense numa situação difícil e perceba cinco sentimentos presentes, agradáveis ou desagradáveis. Lembre-se: sentir faz parte de ser humano. Observe o efeito dessa postura.", "Quais foram os cinco sentimentos que você encontrou?"], "draft": 1}, {"id": "COLE-15", "t": "A pílula da felicidade", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-15.webp", "v": ["Se existisse uma pílula contra sentimentos ruins, o que mais ela levaria embora?", "Imagine uma pílula que eliminasse para sempre qualquer emoção desagradável. O que você ganharia? O que perderia junto?", "O que você perderia se nunca mais sentisse tristeza?"], "draft": 1}, {"id": "COLE-16", "t": "Varinha mágica", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-16.webp", "v": ["Se uma varinha apagasse o medo, o que você faria depois?", "Se pudesse apagar instantaneamente um sentimento difícil, o que faria depois? A resposta mostra o que importa além de se livrar do desconforto.", "Como você pode fazer isso hoje, mesmo com o medo junto?"], "draft": 1}, {"id": "COLE-17", "t": "Monstro na lata", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-17.webp", "v": ["Quanto mais a gente foge do monstro, maior ele parece.", "Quando tentamos manter algo assustador fechado e distante, nossa vida pode começar a girar em torno de não abrir a lata. Explore o que muda ao permitir contato seguro.", "O que acontece com o monstro quando você olha para ele com calma?"], "draft": 1}, {"id": "COLE-18", "t": "Âncora no desconforto", "k": "Aceitação", "a": "8+", "img": "img/cole/COLE-18.webp", "v": ["Uma âncora segura o barco mesmo quando o mar está agitado.", "Quando uma emoção forte aparecer, reconheça que ela está aqui, conecte-se ao corpo e ao ambiente e escolha permanecer presente sem precisar vencê-la primeiro.", "O que ajudou você a ficar firme?"], "draft": 1}, {"id": "COLE-19", "t": "As duas regras", "k": "Aceitação", "a": "10+", "img": "img/cole/COLE-19.webp", "v": ["Tem coisas que dá para controlar e coisas que não dá.", "Pense em algo do mundo externo que você pode mudar, como fechar uma janela. Agora pense numa emoção difícil. O que acontece quando você tenta dar ordens a ela? Observe a diferença entre agir sobre uma situação e lutar contra o que sente.", "Em que situações o controle ajuda? Quando a luta interna começa a afastar você do que importa?"], "x": 1, "draft": 1}, {"id": "COLE-20", "t": "Controle: funciona onde?", "k": "Aceitação", "a": "10+", "img": "img/cole/COLE-20.webp", "v": ["Arrumar a mesa é fácil. Mandar no sentimento já é outra história.", "Faça duas tentativas: organize um objeto à sua frente e depois tente fazer uma emoção desaparecer por ordem. Compare os resultados, sem precisar provocar sofrimento intenso.", "O que você conseguiu controlar? O que aconteceu ao tentar controlar o sentimento?"], "x": 1, "draft": 1}, {"id": "COLE-21", "t": "A solução definitiva?", "k": "Aceitação", "a": "10+", "img": "img/cole/COLE-21.webp", "v": ["Toda tentativa de nunca mais sentir tem um preço.", "Lembre de estratégias usadas para nunca mais sentir uma emoção difícil. Elas funcionaram para sempre? Que tempo, energia ou oportunidades custaram? Experimente considerar abrir espaço para sentir e seguir com o que importa.", "O que a busca pela solução definitiva tem custado? Que pequeno movimento de abertura você poderia experimentar?"], "x": 1, "draft": 1}], "DE": [{"id": "DE-01", "t": "Não pense nisso", "k": "Desfusão", "a": "8+", "img": "img/de/DE-01.webp", "v": ["Quanto mais você tenta não pensar, mais o pensamento aparece.", "Tente não pensar em algo por 30 segundos e observe o que a mente faz.", "Em que você pensou quando tentou não pensar?"], "draft": 1}, {"id": "DE-02", "t": "Iscas", "k": "Desfusão", "a": "8+", "img": "img/de/DE-02.webp", "v": ["Alguns pensamentos são iscas: parecem gostosos e fisgam a gente.", "Identifique pensamentos/emoções que fisgam você e o que costuma fazer depois.", "Qual isca fisga você com mais frequência?"], "draft": 1}, {"id": "DE-04", "t": "O Ditador", "k": "Desfusão", "a": "8+", "img": "img/de/DE-04.webp", "v": ["A mente às vezes dá ordens. Você não precisa obedecer todas.", "Pense 'não consigo levantar o braço' e levante-o; note pensamento versus ação.", "Que ordem da sua mente você conseguiu desobedecer?"], "draft": 1}, {"id": "DE-05", "t": "Rádio Más Notícias", "k": "Desfusão", "a": "8+", "img": "img/de/DE-05.webp", "v": ["Tem uma rádio na cabeça que só toca notícia ruim.", "A mente transmite más notícias; deixe ao fundo e continue escolhendo ações.", "O que acontece quando você abaixa o volume da rádio?"], "draft": 1}, {"id": "DE-07", "t": "Palavra repetida", "k": "Desfusão", "a": "8+", "img": "img/de/DE-07.webp", "v": ["Uma palavra repetida muitas vezes vira só um som.", "Repita uma palavra/pensamento por 30 segundos e observe som e significado mudarem.", "O que a palavra virou depois de tantas repetições?"], "draft": 1}, {"id": "DE-08", "t": "É só um pensamento", "k": "Desfusão", "a": "8+", "img": "img/de/DE-08.webp", "v": ["Pensamento não é fato. É só um pensamento.", "Acrescente 'Estou tendo o pensamento de que...' antes da frase da mente.", "O pensamento ficou mais leve com a frase nova?"], "draft": 1}, {"id": "DE-09", "t": "Folhas no riacho", "k": "Desfusão", "a": "8+", "img": "img/de/DE-09.webp", "v": ["Pensamentos podem passar como folhas num riacho.", "Coloque cada pensamento sobre uma folha e observe-o seguir, sem empurrar nem segurar.", "Algum pensamento quis ficar parado? O que você fez?"], "draft": 1}, {"id": "DE-10", "t": "Obrigado, mente!", "k": "Desfusão", "a": "8+", "img": "img/de/DE-10.webp", "v": ["Sua mente trabalha muito para te proteger. Dá para agradecer.", "Quando a mente trouxer uma história conhecida, agradeça e volte ao que escolheu fazer.", "Como foi agradecer em vez de brigar com a mente?"], "draft": 1}, {"id": "DE-11", "t": "Mude a voz", "k": "Desfusão", "a": "8+", "img": "img/de/DE-11.webp", "v": ["O mesmo pensamento soa diferente em outra voz.", "Repita o pensamento com voz de personagem, locutor ou robô e observe o que muda.", "Qual voz deixou o pensamento mais engraçado?"], "draft": 1}, {"id": "DE-12", "t": "Mude a velocidade", "k": "Desfusão", "a": "8+", "img": "img/de/DE-12.webp", "v": ["Bem rápido ou bem devagar, o pensamento perde a pose.", "Diga o pensamento muito devagar e depois muito rápido; observe o que muda.", "Ele mandou menos em você depois de mudar a velocidade?"], "draft": 1}, {"id": "DE-13", "t": "Investigue o pensamento", "k": "Desfusão", "a": "8+", "img": "img/de/DE-13.webp", "v": ["Dá para investigar um pensamento como um detetive.", "Note o pensamento. Pergunte por que ele apareceu agora, para que parece servir, se fala do passado ou do futuro e se é útil neste momento. Depois observe o efeito de investigá-lo.", "O que você descobriu sobre esse pensamento?"], "draft": 1}, {"id": "DE-14", "t": "Troque de canal pelos 5 sentidos", "k": "Desfusão", "a": "8+", "img": "img/de/DE-14.webp", "v": ["Quando a mente prende você, os sentidos ajudam a trocar de canal.", "Note o pensamento e, sem precisar fazê-lo sumir, faça algo diferente usando os cinco sentidos. Observe que outros pensamentos podem aparecer e que sua atenção pode se mover.", "Que sentido ajudou você a sair do pensamento?"], "draft": 1}, {"id": "DE-15", "t": "Máquina de pensamentos", "k": "Desfusão", "a": "8+", "img": "img/de/DE-15.webp", "v": ["Na máquina, o pensamento muda de forma e perde a força.", "Note o pensamento e imagine colocá-lo numa máquina que o deixa passar por diferentes transformações. Observe o que acontece com o impacto que ele tem sobre você.", "Como o pensamento saiu da máquina?"], "draft": 1}, {"id": "DE-16", "t": "Para onde esse pensamento te leva?", "k": "Desfusão", "a": "8+", "img": "img/de/DE-16.webp", "v": ["Todo pensamento tenta levar você para algum lugar.", "Note o pensamento e pergunte: se eu seguir o que ele manda, para onde ele me leva? Se eu pudesse agir de outro modo, onde eu preferiria chegar? Observe a diferença entre as duas rotas.", "Para onde você prefere ir?"], "draft": 1}, {"id": "DE-17", "t": "Dê um título à história", "k": "Desfusão", "a": "8+", "img": "img/de/DE-17.webp", "v": ["A mente repete as mesmas histórias. Dá para dar um nome a elas.", "Pense numa situação difícil e note as coisas que sua mente costuma dizer. Se esses pensamentos formassem uma história, que título você daria a ela? Quando ela voltar, reconheça: 'essa história de novo'.", "Que título você deu para a sua história?"], "draft": 1}, {"id": "DE-19", "t": "Cante o pensamento", "k": "Desfusão", "a": "8+", "img": "img/de/DE-19.webp", "v": ["Cantar um pensamento difícil pode deixar ele bem menos sério.", "Note o pensamento, escolha uma música conhecida e cante as palavras do pensamento na melodia. Observe o efeito.", "Como ficou o pensamento depois da música?"], "draft": 1}, {"id": "DE-21", "t": "Por quê? Por quê? Por quê?", "k": "Desfusão", "a": "8+", "img": "img/de/DE-21.webp", "v": ["Às vezes a mente entra num loop de porquês que não acaba.", "Observe quando a mente entra numa sequência de 'por quê?'. Note se buscar mais uma explicação está ajudando ou apenas prolongando o loop; então escolha onde colocar sua atenção.", "O que ajudou você a sair do loop?"], "draft": 1}, {"id": "DE-22", "t": "Monstros no ônibus", "k": "Desfusão", "a": "8+", "img": "img/de/DE-22.webp", "v": ["Os pensamentos podem fazer barulho no ônibus. Quem dirige é você.", "Imagine que pensamentos difíceis são passageiros barulhentos. Eles podem falar enquanto você continua conduzindo na direção escolhida.", "Para onde você levou o ônibus, mesmo com os monstros falando?"], "draft": 1}, {"id": "DEX-19", "lab": "DE-19", "t": "Vendedor insistente", "k": "Desfusão", "a": "8+", "img": "img/de/DEX-19.webp", "v": ["A mente vende ideias o tempo todo. Você não precisa comprar todas.", "A mente vende ideias; em vez de comprar tudo, pergunte se isso ajuda na direção escolhida.", "Que ideia da mente você resolveu não comprar?"], "x": 1, "orig": "DE-03", "draft": 1}, {"id": "DEX-20", "lab": "DE-20", "t": "GPS da Mente", "k": "Desfusão", "a": "8+", "img": "img/de/DEX-20.webp", "v": ["A mente parece um GPS: sugere rotas, mas quem escolhe é você.", "A mente oferece rotas como GPS; você continua escolhendo a direção.", "Qual rota você escolheu, mesmo com o GPS falando outra coisa?"], "x": 1, "orig": "DE-06", "draft": 1}, {"id": "DEX-21", "lab": "DE-21", "t": "Mude a ordem das palavras", "k": "Desfusão", "a": "8+", "img": "img/de/DEX-21.webp", "v": ["Trocar as palavras de lugar tira a força da frase.", "Note o pensamento. Diga as mesmas palavras em outra ordem e observe o que acontece com a força e o sentido da frase.", "O que aconteceu com a frase depois de embaralhar?"], "x": 1, "orig": "DE-18", "draft": 1}, {"id": "DEX-22", "lab": "DE-22", "t": "Pesque e solte", "k": "Desfusão", "a": "8+", "img": "img/de/DEX-22.webp", "v": ["Quando um pensamento fisgar você, dá para soltar.", "Quando perceber que foi fisgado por um pensamento, reconheça-o e pratique soltá-lo, voltando ao que escolheu fazer.", "Que pensamento você conseguiu soltar hoje?"], "x": 1, "orig": "DE-20", "draft": 1}, {"id": "DEX-23", "lab": "DE-23", "t": "Nomeie a isca", "k": "Desfusão", "a": "8+", "img": "img/de/DEX-23.webp", "v": ["Dar nome à isca ajuda a perceber antes de morder.", "Quando um pensamento recorrente aparecer, identifique que tipo de isca ele está oferecendo: medo, comparação, crítica, certeza, catástrofe… Nomear a isca ajuda a percebê-la antes de morder.", "Qual foi o nome da isca que apareceu?"], "x": 1, "orig": "DE-23", "draft": 1}], "LEA": [{"id": "LEA-01", "t": "Quem está percebendo?", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-01.webp", "v": ["Tem uma parte de você que percebe tudo o que você sente.", "Você é essa emoção ou está percebendo essa emoção? Quem está observando?", "Quem estava percebendo esse sentimento?"], "draft": 1}, {"id": "LEA-02", "t": "Eu do futuro", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-02.webp", "v": ["O você do futuro pode ter bons conselhos.", "Imagine uma situação futura difícil e converse com seu eu futuro sobre como quer responder.", "O que o seu eu do futuro disse para você?"], "draft": 1}, {"id": "LEA-03", "t": "Mensagem ao eu futuro", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-03.webp", "v": ["Um recado para você mesmo pode ajudar numa hora difícil.", "Escreva uma mensagem para receber antes de uma situação em que costuma ficar preso.", "Quando você vai querer ler essa mensagem?"], "draft": 1}, {"id": "LEA-04", "t": "Troca de lente", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-04.webp", "v": ["Cada lente mostra uma parte da cena.", "Olhe para a situação por mais de uma perspectiva sem decidir uma verdade total.", "O que mudou quando você trocou de lente?"], "draft": 1}, {"id": "LEA-05", "t": "A mesma cena, outra lente", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-05.webp", "v": ["A mesma situação parece diferente vista por outra pessoa.", "Imagine a situação vista por você, por outra pessoa e por um observador de fora.", "O que a outra pessoa poderia ver que você não viu?"], "draft": 1}, {"id": "LEA-06", "t": "Eu aqui, mundo lá fora", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-06.webp", "v": ["Existe você aqui e um mundo inteiro acontecendo lá fora.", "Use os cinco sentidos para notar o que acontece ao redor. Perceba que existe você e também experiências acontecendo fora de você; experimente deslocar a atenção de si para o mundo.", "O que estava acontecendo no mundo enquanto você sentia isso?"], "draft": 1}, {"id": "LEA-07", "t": "Eu através do tempo", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-07.webp", "v": ["Você mudou muito com o tempo, mas tem algo que continua.", "Visite mentalmente quem você foi no passado, quem é agora e quem gostaria de ser no futuro. Observe o que muda e o que permanece como perspectiva que percebe essas versões.", "O que continua igual em você desde pequeno?"], "draft": 1}, {"id": "LEA-08", "t": "Bolha do mundo", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-08.webp", "v": ["Vista de longe, uma preocupação fica do tamanho certo.", "Imagine-se flutuando numa bolha e olhando o mundo inteiro. Note quantas pessoas, animais e ambientes existem e perceba que você faz parte desse mundo, mas ele é maior do que apenas você.", "Como sua preocupação pareceu vista lá de cima?"], "draft": 1}, {"id": "LEA-09", "t": "Sou mais que esse pensamento", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-09.webp", "v": ["Você tem pensamentos, mas é muito mais do que eles.", "Note um pensamento presente. Diga a si mesmo: 'Eu não sou apenas esse pensamento'. Observe como é perceber-se como maior do que esse conteúdo mental.", "O que mais existe em você além desse pensamento?"], "draft": 1}, {"id": "LEA-10", "t": "Pelos olhos do outro", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-10.webp", "v": ["Olhar pelos olhos do outro ajuda a entender o que ele sente.", "Perceba como outra pessoa está se sentindo. Lembre-se de uma situação em que você se sentiu assim e experimente olhar a cena a partir da perspectiva dela.", "O que você entendeu sobre a outra pessoa?"], "draft": 1}, {"id": "LEA-11", "t": "Sou mais que esse sentimento", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-11.webp", "v": ["Sentimentos passam por você, mas não são você inteiro.", "Note o sentimento presente. Diga a si mesmo: 'Eu não sou apenas esse sentimento'. Observe como é perceber-se como maior do que a emoção que está acontecendo agora.", "O que mais existe em você além desse sentimento?"], "draft": 1}, {"id": "LEA-12", "t": "Eu em diferentes cenários", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-12.webp", "v": ["Em casa, na escola ou com amigos, você mostra jeitos diferentes de ser.", "Pense em diferentes contextos da sua vida. Note como sua mente descreve quem você é em cada um e como você pode agir de modos diferentes conforme a situação. Pessoas e experiências mudam ao longo do tempo.", "Em que lugar você gosta mais do seu jeito de ser?"], "draft": 1}, {"id": "LEA-13", "t": "Observador de fora", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-13.webp", "v": ["De fora, uma cena difícil pode parecer diferente.", "Pense numa situação difícil. Imagine-se do lado de fora da experiência, observando-a. Note que você é mais do que apenas o que vive naquele momento e observe o efeito dessa perspectiva.", "O que o observador de fora percebeu?"], "draft": 1}, {"id": "LEA-14", "t": "O céu e o clima", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-14.webp", "v": ["Você é como o céu: o tempo muda, mas o céu continua lá.", "Imagine que você é o céu e que pensamentos e emoções são o clima. Que mudanças passam pelo céu sem que ele deixe de ser céu?", "Que 'clima' passou pelo seu céu hoje?"], "draft": 1}, {"id": "LEA-15", "t": "Eu noto que noto", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-15.webp", "v": ["Existe uma parte de você que percebe tudo o que você sente e pensa.", "Observe um pensamento. Agora perceba que você está notando esse pensamento. O que muda quando reconhece também a perspectiva de quem observa?", "Como é perceber quem está notando?"], "draft": 1}, {"id": "LEA-16", "t": "Aqui, ali, depois", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-16.webp", "v": ["Uma mesma situação parece diferente de outro lugar e em outro momento.", "Descreva uma situação daqui, como você a vê. Depois imagine observá-la de outro lugar e em outro momento. O que permanece e o que muda?", "O que mudou quando você olhou de outro lugar?"], "draft": 1}, {"id": "LEA-17", "t": "A foto não é a pessoa", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-17.webp", "v": ["Um rótulo é só uma foto de um momento. Você é o filme inteiro.", "Escolha um rótulo que costuma usar sobre si. Imagine-o como uma fotografia de um instante. Que outras cenas mostram aspectos seus que não cabem nessa foto?", "Que outras fotos mostram quem você é?"], "draft": 1}, {"id": "LEA-18", "t": "A cadeira do observador", "k": "Eu observador", "a": "8+", "img": "img/lea/LEA-18.webp", "v": ["Dá para sentar na cadeira de quem observa e olhar tudo com calma.", "Imagine sua experiência acontecendo numa cadeira e você observando de outra. Note sensações, pensamentos e impulsos sem precisar mudá-los. Qual escolha fica visível dessa posição?", "O que você viu da cadeira do observador?"], "draft": 1}], "VAL": [{"id": "VAL-01", "t": "Quem e o que importa?", "k": "Valores", "a": "8+", "img": "img/val/VAL-01.webp", "v": ["Algumas pessoas e coisas fazem seu coração ficar quentinho.", "Quem ou o que é importante? O que torna isso importante?", "O que essas pessoas e coisas dizem sobre você?"], "draft": 1}, {"id": "VAL-02", "t": "Eu sou importante?", "k": "Valores", "a": "8+", "img": "img/val/VAL-02.webp", "v": ["Você também merece ser tratado como alguém importante.", "O que significa tratar a si mesmo como alguém importante? Que ação mostraria isso?", "Que gesto de cuidado você pode ter com você hoje?"], "draft": 1}, {"id": "VAL-03", "t": "Metas x Direções", "k": "Valores", "a": "8+", "img": "img/val/VAL-03.webp", "v": ["Meta é chegar num lugar. Direção é o caminho que continua.", "Metas podem ser alcançadas; direções valoradas continuam orientando ações.", "Qual é a direção por trás da sua meta?"], "draft": 1}, {"id": "VAL-04", "t": "Qualidades que quero viver", "k": "Valores", "a": "8+", "img": "img/val/VAL-04.webp", "v": ["Valores aparecem no jeito como você faz as coisas.", "Que qualidades quer colocar em suas ações e relações? Como apareceriam na prática?", "Que qualidade você quer mostrar esta semana?"], "draft": 1}, {"id": "VAL-05", "t": "Placas no caminho", "k": "Valores", "a": "8+", "img": "img/val/VAL-05.webp", "v": ["Nem toda placa aponta para o que importa.", "Diante de caminhos diferentes, quais placas apontam para aquilo que realmente importa?", "Qual placa você escolheu seguir?"], "draft": 1}, {"id": "VAL-06", "t": "Bússola do que importa", "k": "Valores", "a": "8+", "img": "img/val/VAL-06.webp", "v": ["A bússola do VAL não dá a resposta certa. Ela aponta uma direção.", "Quando estiver em dúvida, pergunte: qual escolha aponta para a pessoa que quero ser?", "Para onde sua bússola apontou hoje?"], "draft": 1}, {"id": "VAL-07", "t": "Pessoas importantes", "k": "Valores", "a": "8+", "img": "img/val/VAL-07.webp", "v": ["As pessoas que você ama mostram o que é importante para você.", "Pense nas pessoas que são importantes para você. O que faz com que elas sejam importantes? O que essa relação revela sobre aquilo que você valoriza?", "O que você quer cuidar nessas relações?"], "draft": 1}, {"id": "VAL-08", "t": "Coisas que gosto de fazer", "k": "Valores", "a": "8+", "img": "img/val/VAL-08.webp", "v": ["O que você gosta de fazer guarda pistas dos seus valores.", "Pense nas coisas que você gosta de fazer. O que existe nessas atividades que é importante para você?", "Que pista você encontrou?"], "draft": 1}, {"id": "VAL-09", "t": "Lugares importantes", "k": "Valores", "a": "8+", "img": "img/val/VAL-09.webp", "v": ["Alguns lugares são especiais por causa do que acontece neles.", "Pense em lugares importantes para você. O que acontece nesses lugares? Quem está lá? O que eles representam?", "O que faz esse lugar ser tão importante?"], "draft": 1}, {"id": "VAL-10", "t": "O que quero defender", "k": "Valores", "a": "8+", "img": "img/val/VAL-10.webp", "v": ["Defender algo mostra o que você acha justo e importante.", "Pense em algo que você acredita ser importante ou que gostaria de defender. O que isso diz sobre a pessoa que você quer ser?", "O que você faria para defender isso?"], "draft": 1}, {"id": "VAL-11", "t": "Quem quero ser para os outros", "k": "Valores", "a": "8+", "img": "img/val/VAL-11.webp", "v": ["Você pode escolher que tipo de amigo, filho ou colega quer ser.", "Escolha pessoas importantes e pergunte: que tipo de pessoa quero ser quando estou com elas? Que qualidades quero levar para essa relação?", "Que atitude mostraria isso amanhã?"], "draft": 1}, {"id": "VAL-12", "t": "O que quero que minha vida represente", "k": "Valores", "a": "8+", "img": "img/val/VAL-12.webp", "v": ["Suas escolhas vão contando a história da sua vida.", "Imagine olhar para sua vida como um todo. Pelo que você gostaria que ela fosse reconhecida? O que gostaria que suas escolhas mostrassem sobre você?", "Que história você quer que suas escolhas contem?"], "draft": 1}, {"id": "VAL-13", "t": "Escolha sua direção", "k": "Valores", "a": "8+", "img": "img/val/VAL-13.webp", "v": ["Quando há caminhos diferentes, seus valores ajudam a escolher.", "Diante de duas ou mais possibilidades, pergunte qual delas se aproxima mais daquilo que importa e da pessoa que você quer ser.", "Qual caminho chega mais perto de quem você quer ser?"], "draft": 1}, {"id": "VAL-14", "t": "Quando ninguém está olhando", "k": "Valores", "a": "8+", "img": "img/val/VAL-14.webp", "v": ["Seus valores continuam valendo mesmo quando ninguém está vendo.", "Se ninguém fosse avaliar, elogiar ou criticar você, que tipo de pessoa ainda gostaria de ser nessa situação?", "O que você faria se ninguém estivesse olhando?"], "draft": 1}, {"id": "VAL-15", "t": "Valor ou meta?", "k": "Valores", "a": "8+", "img": "img/val/VAL-15.webp", "v": ["Meta tem fim. Valor continua guiando o caminho.", "Pergunte se aquilo pode ser concluído e marcado como feito ou se descreve uma maneira contínua de viver e agir. Metas terminam; valores continuam orientando.", "O que você escolheu: um valor ou uma meta?"], "draft": 1}, {"id": "VAL-16", "t": "Escolher dói às vezes", "k": "Valores", "a": "8+", "img": "img/val/VAL-16.webp", "v": ["Às vezes dói justamente porque importa.", "Aquilo que importa também pode trazer medo, saudade, frustração ou risco de perda. Que desconforto aparece justamente porque isso é importante para você?", "O que esse desconforto mostra que é importante para você?"], "draft": 1}, {"id": "VAL-17", "t": "Domínios da vida", "k": "Valores", "a": "8+", "img": "img/val/VAL-17.webp", "v": ["A vida tem várias áreas, e cada uma pode ter seus valores.", "Observe diferentes áreas da vida — relações, estudo/trabalho, cuidado pessoal, lazer, comunidade — e descubra quais qualidades você quer viver em cada uma.", "Em qual área você quer cuidar mais agora?"], "draft": 1}, {"id": "VAL-18", "t": "Bússola sem norte perfeito", "k": "Valores", "a": "8+", "img": "img/val/VAL-18.webp", "v": ["Não precisa ter certeza para começar a caminhar.", "Você não precisa ter certeza absoluta sobre seus valores para começar. Experimente uma direção e observe se viver assim aproxima você da vida que quer construir.", "Que direção você quer experimentar primeiro?"], "draft": 1}], "VAI": [{"id": "VAI-01", "t": "Movimentos de aproximação", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-01.webp", "v": ["Pequenos movimentos também aproximam você do que importa.", "Que ações desta semana aproximaram você de quem ou do que importa?", "Qual movimento desta semana deixou você mais orgulhoso?"], "draft": 1}, {"id": "VAI-02", "t": "Meia-volta", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-02.webp", "v": ["Perceber que se afastou já é o primeiro passo para voltar.", "Ao notar afastamento, faça uma pequena virada em direção ao que importa.", "Que meia-volta você deu?"], "draft": 1}, {"id": "VAI-03", "t": "Tenho que ou escolho?", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-03.webp", "v": ["'Eu tenho que' pesa. 'Eu escolho' dá força.", "Note 'tenho que' e formule a ação como escolha ligada ao que importa.", "Como ficou a tarefa quando virou escolha?"], "draft": 1}, {"id": "VAI-04", "t": "Cultivando minha vida", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-04.webp", "v": ["Ações cuidadas todo dia fazem a vida crescer, como uma planta.", "Identifique uma ação feita com qualidades importantes e como constrói sua vida.", "O que você regou hoje na sua vida?"], "draft": 1}, {"id": "VAI-05", "t": "Próximo passo mínimo", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-05.webp", "v": ["O menor passo possível ainda é um passo.", "Qual o menor passo possível, realizável hoje, na direção do que importa, mesmo com desconforto?", "Qual foi o seu menor passo de hoje?"], "draft": 1}, {"id": "VAI-06", "t": "Faça o que importa", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-06.webp", "v": ["Não é sobre fazer tudo. É sobre fazer o que tem significado.", "Escolha uma ação concreta que expresse algo importante e faça o primeiro movimento.", "Que ação com significado você fez hoje?"], "draft": 1}, {"id": "VAI-07", "t": "Um passo de cada vez", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-07.webp", "v": ["Uma escada grande se sobe um degrau de cada vez.", "Qual é o próximo passo pequeno o suficiente para você realmente fazê-lo?", "Qual degrau você subiu hoje?"], "draft": 1}, {"id": "VAI-08", "t": "Plano B também avança", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-08.webp", "v": ["Se o plano A não der certo, o plano B também leva lá.", "Se o caminho não funcionar, ajuste o plano sem abandonar a direção.", "Qual é o seu plano B?"], "draft": 1}, {"id": "VAI-09", "t": "Quando e onde?", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-09.webp", "v": ["Um plano com dia e lugar tem mais chance de sair do papel.", "Escolha uma ação pequena ligada a um valor. Complete: 'No dia __, às __, no lugar __, vou __'. Como saberá que começou?", "Qual foi o seu 'quando e onde'?"], "draft": 1}, {"id": "VAI-10", "t": "Se acontecer, então…", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-10.webp", "v": ["Obstáculos vão aparecer. Dá para se preparar para eles antes.", "Pense em um obstáculo provável. Crie um plano: 'Se isso acontecer, então farei este passo alternativo'. O plano continua apontando para o que importa?", "Qual 'se… então' você criou?"], "draft": 1}, {"id": "VAI-11", "t": "Escada de passos", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-11.webp", "v": ["Um caminho difícil fica possível quando vira degraus.", "Desenhe três degraus, do mais fácil ao mais desafiador, para uma ação importante. Qual degrau é possível hoje?", "Em qual degrau você está hoje?"], "draft": 1}, {"id": "VAI-12", "t": "Coragem com medo", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-12.webp", "v": ["Coragem não é ficar sem medo. É dar o passo levando o medo junto.", "Nomeie uma ação importante que o medo dificulta. Como dar um passo seguro levando o medo junto, em vez de esperar que desapareça?", "Que passo você deu mesmo com medo?"], "draft": 1}, {"id": "VAI-13", "t": "Treino, não prova", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-13.webp", "v": ["Treinar é tentar, errar e aprender. Ninguém está te dando nota.", "Escolha uma habilidade que expressa seus valores. Pratique-a por cinco minutos e observe o que aprendeu, sem transformar o exercício em teste de valor pessoal.", "O que você aprendeu no treino de hoje?"], "draft": 1}, {"id": "VAI-14", "t": "Recomeço possível", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-14.webp", "v": ["Parar não apaga o caminho. Dá para recomeçar de onde você está.", "Lembre de um plano interrompido. Em vez de julgar a pausa, pergunte: qual é a próxima ação pequena que me reconecta à direção?", "Qual é o seu passo de recomeço?"], "draft": 1}, {"id": "VAI-15", "t": "Peça apoio", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-15.webp", "v": ["Ninguém precisa fazer tudo sozinho.", "Que pessoa ou recurso poderia facilitar seu próximo passo? Formule um pedido específico e respeitoso de ajuda.", "A quem você pode pedir ajuda?"], "draft": 1}, {"id": "VAI-16", "t": "O que funcionou?", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-16.webp", "v": ["Olhar para o que já fez ajuda a dar o próximo passo.", "Depois de agir, observe: o que funcionou, o que dificultou e o que ajustarei na próxima tentativa? Aprender também é avançar.", "O que você quer repetir da próxima vez?"], "draft": 1}, {"id": "VAI-17", "t": "Compromisso de 24 horas", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-17.webp", "v": ["Um dia de cada vez também é um jeito de avançar.", "Escolha uma ação observável que caiba nas próximas 24 horas. Anote quando e onde fará. Depois confira se ela expressou a qualidade que escolheu viver.", "O que você vai fazer nas próximas 24 horas?"], "draft": 1}, {"id": "VAI-18", "t": "Persistir ou mudar a rota?", "k": "Ação comprometida", "a": "8+", "img": "img/vai/VAI-18.webp", "v": ["Às vezes é hora de continuar. Às vezes, de mudar o jeito.", "Pergunte: continuar deste jeito me aproxima do que importa? Se não, que estratégia posso mudar sem abandonar o valor?", "Continuar ou ajustar: o que você escolheu?"], "draft": 1}]};
+const HEROES=[
+ {id:'AKI',proc:'Momento presente',power:'Herói do agora',img:'img/aki/AKI-01.webp',motto:'"Ei, onde você está agora? Vamos voltar pra cá!"',
+  about:'AKI ajuda a sair do piloto automático e perceber o que está acontecendo aqui e agora: o que você vê, ouve, cheira, toca e sente no corpo. Quando a cabeça viaja para longe, AKI faz uma PAUSA e volta para o agora, sem bronca.'},
+ {id:'COLE',proc:'Aceitação',power:'Antena do Coração',img:'img/cole/COLE-04.webp',motto:'"Pode chegar, sentimento. Tem espaço aqui."',
+  about:'COLE usa a Antena do Coração, uma tiara com dois corações que captam os sentimentos, até os difíceis. Em vez de brigar com eles ou trancá-los numa lata, COLE recebe cada sentimento como uma visita e abre espaço para ele ficar um pouco.'},
+ {id:'DE',proc:'Desfusão',power:'Megafone de Desfusão',img:'img/de/DE-10.webp',motto:'"Obrigado, mente! Agora eu escolho o que fazer."',
+  about:'A mente de todo mundo fala sem parar e às vezes joga iscas. DE tem um megafone que mostra que pensamento é só pensamento: ele muda a voz, a velocidade e a ordem das palavras até o pensamento perder a força de mandar em você.'},
+ {id:'LEA',proc:'Eu observador',power:'Óculos e estojo de lentes',img:'img/lea/LEA-04.webp',motto:'"Vamos olhar essa cena por outra lente?"',
+  about:'LEA usa óculos e carrega um estojo de lentes que mostram a mesma cena de vários jeitos: pelos seus olhos, pelos olhos de outra pessoa, de longe, no passado ou no futuro. Com elas você descobre que é maior do que qualquer pensamento ou sentimento.'},
+ {id:'VAL',proc:'Valores',power:'Bússola do que Importa',img:'img/val/VAL-06.webp',motto:'"Qual caminho aponta para quem eu quero ser?"',
+  about:'VAL tem uma bússola que não mostra a resposta certa: ela aponta para o que é importante para você. Pessoas que você ama, coisas que gosta de fazer, o jeito como quer tratar os outros e a si mesmo.'},
+ {id:'VAI',proc:'Ação comprometida',power:'Mochila-propulsor',img:'img/vai/VAI-10.webp',motto:'"Um passo pequeno também é um passo!"',
+  about:'VAI tem uma mochila-propulsor e transforma o que importa em ação. Mesmo com medo ou preguiça, escolhe o próximo passo, pequeno o bastante para conseguir. Se o caminho fecha, VAI faz um plano B, mas não larga a direção.'}
+];
+const KID_VALUES=['Amizade','Família','Brincar','Aprender','Coragem','Gentileza','Ajudar','Honestidade','Criatividade','Natureza','Cuidar dos animais','Esporte e movimento','Música e arte','Diversão','Calma','Cuidar de mim','Ser justo','Aventura','Paciência','Respeito'];
+const BODY=[['cabeca','Cabeça'],['garganta','Garganta'],['peito','Peito'],['barriga','Barriga'],['bracos','Braços e mãos'],['pernas','Pernas e pés']];
+
+const Api=window.ActSquadApi;
+const PAC_KEY='act-pac-atual';
+const $=id=>document.getElementById(id);
+/* Estado clínico: vive só na memória e na API (GET/PUT /patients/{id}/state). Nada de localStorage clínico. */
+function normalize(o){
+ o=(o&&typeof o==='object'&&!Array.isArray(o))?o:{};
+ o.got=(o.got&&typeof o.got==='object'&&!Array.isArray(o.got))?o.got:{};
+ o.f=(o.f&&typeof o.f==='object'&&!Array.isArray(o.f))?o.f:{};
+ o.vals=Array.isArray(o.vals)?o.vals:[];
+ o.body=Array.isArray(o.body)?o.body:[];
+ o.th=Number.isFinite(+o.th)?+o.th:0;
+ return o;}
+let S=normalize({});
+let curPid=null,PATS=[],ready=false,dirty=false,saveT=null,retryT=null,inflight=null;
+const setSS=t=>{$('savestate').textContent=t;};
+const curName=()=>{const p=PATS.find(x=>x.id===curPid);return p?p.displayName:'paciente';};
+/* save(): chamado em toda alteração; agrupa em um PUT .../state após 300 ms de silêncio. */
+function save(){
+ if(!ready||!curPid)return;
+ dirty=true;setSS('Salvando na conta…');
+ clearTimeout(saveT);saveT=setTimeout(()=>{flush().catch(()=>{});},300);}
+function flush(){
+ clearTimeout(saveT);saveT=null;
+ const run=async()=>{
+  if(!dirty||!curPid)return;
+  dirty=false;const pid=curPid,name=curName();
+  try{await Api.putState(pid,JSON.parse(JSON.stringify(S)));if(!dirty)setSS('Salvo na conta · paciente: '+name);}
+  catch(e){
+   if(e.status===401)return;
+   dirty=true;setSS('Não consegui salvar ('+e.message+'). Vou tentar de novo…');
+   clearTimeout(retryT);retryT=setTimeout(()=>{flush().catch(()=>{});},5000);throw e;}};
+ inflight=(inflight||Promise.resolve()).catch(()=>{}).then(run);
+ return inflight;}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const badge=(id,cls='badge')=>`<svg class="${cls}" data-h="${id}" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+const field=(k,label,ph,small,rows)=>`<label class="field"><b>${label}</b>${small?`<small>${small}</small>`:''}${rows===0?`<input type="text" id="f-${k}" data-f="${k}" placeholder="${esc(ph)}">`:`<textarea id="f-${k}" data-f="${k}" placeholder="${esc(ph)}"></textarea>`}</label>`;
+
+const ACT={
+AKI:`<div class="sheet"><h3>Missão 5-4-3-2-1</h3><p>Ligue o Radar do Agora. Olhe ao redor e escreva o que você percebe pelos sentidos. Não precisa ser nada especial.</p>
+<div class="senses">${[[5,'coisas que eu vejo','a janela, meu tênis azul…'],[4,'sons que eu escuto','um carro, o ventilador…'],[3,'coisas que eu sinto no corpo ou com as mãos','a cadeira, o pé no chão…'],[2,'cheiros','sabonete, comida…'],[1,'sabor','pasta de dente…']].map(([n,l,p],i)=>`<div class="sense"><span class="n">${n}</span>${field('aki'+i,l,p,'',0)}</div>`).join('')}</div>
+${field('aki-pausa','Quando eu posso apertar o botão PAUSA?','Antes da prova, quando fico com raiva do meu irmão…','Pense numa hora do dia em que a cabeça costuma ir para longe.')}</div>`,
+COLE:`<div class="sheet"><h3>Missão: onde mora o sentimento?</h3><p>Pense num sentimento que apareceu esta semana. A Antena do Coração vai procurar onde ele chega no corpo.</p>
+${field('cole-nome','Qual sentimento?','medo, raiva, tristeza, vergonha, saudade…','',0)}
+<div class="bodymap"><svg viewBox="0 0 120 220" role="group" aria-label="Corpo: toque nas partes onde o sentimento aparece">
+<circle class="part" data-p="cabeca" cx="60" cy="26" r="20"><title>Cabeça</title></circle>
+<rect class="part" data-p="garganta" x="52" y="46" width="16" height="12" rx="4"><title>Garganta</title></rect>
+<rect class="part" data-p="peito" x="34" y="58" width="52" height="40" rx="12"><title>Peito</title></rect>
+<rect class="part" data-p="barriga" x="36" y="98" width="48" height="34" rx="12"><title>Barriga</title></rect>
+<path class="part" data-p="bracos" d="M30 62c-10 6-14 30-16 56l10 2c3-22 6-38 10-46zM90 62c10 6 14 30 16 56l-10 2c-3-22-6-38-10-46z"><title>Braços e mãos</title></path>
+<path class="part" data-p="pernas" d="M38 132h20l-2 80H42zM62 132h20l-4 80H64z"><title>Pernas e pés</title></path></svg>
+<div class="stack"><div class="chips" id="bodychips">${BODY.map(([k,l])=>`<button class="chip" data-body="${k}" aria-pressed="false">${l}</button>`).join('')}</div>
+<p class="note">Toque no desenho ou nos nomes. Pode marcar mais de um lugar.</p></div></div>
+<div class="row2">${field('cole-forma','Se ele fosse uma coisa, como seria?','uma pedra pesada, um balão…','Dura ou macia? Quente ou fria? Grande ou pequena?')}${field('cole-mao','Mão que acolhe','Coloquei a mão na barriga e senti…','Ponha a mão nesse lugar e respire devagar. O que acontece?')}</div></div>`,
+DE:`<div class="sheet"><h3>Missão: Máquina de pensamentos</h3><p>Escreva um pensamento chato que a sua mente costuma repetir. Depois use os botões do Dispositivo de Desfusão e veja o que acontece com ele.</p>
+${field('de-pens','O pensamento','Eu não vou conseguir.','',0)}
+<div class="machine"><div class="screen" id="de-screen" aria-live="polite">Escreva um pensamento acima.</div>
+<div class="actions" id="de-btns"><button class="btn" data-m="tendo">Estou tendo o pensamento…</button><button class="btn ghost" data-m="robo">Voz de robô</button><button class="btn ghost" data-m="lento">Bem devagar</button><button class="btn ghost" data-m="mistura">Embaralhar</button><button class="btn ghost" data-m="mini">Encolher</button><button class="btn ghost" data-m="obrigado">Obrigado, mente!</button></div></div>
+<div class="row2">${field('de-titulo','Que título tem essa história?','A história do "não sou bom nisso"','Quando ela voltar, você pode dizer: "olha a história de novo".',0)}${field('de-efeito','O que mudou depois da máquina?','Ficou engraçado, perdeu um pouco a força…','')}</div></div>`,
+LEA:`<div class="sheet"><h3>Missão: três lentes</h3><p>Pense numa situação difícil que aconteceu. LEA vai olhar para ela com três lentes diferentes.</p>
+${field('lea-cena','A situação','Meu amigo não me chamou para jogar no recreio.','')}
+<div class="lenses"><div class="lens" data-h="LEA"><h4>Lente normal</h4>${field('lea-eu','O que eu vi e senti?','','',)}</div><div class="lens" data-h="LEA"><h4>Lente do outro</h4>${field('lea-outro','Como a outra pessoa pode ter visto?','','')}</div><div class="lens" data-h="LEA"><h4>Lente observador</h4>${field('lea-longe','Um observador lá de cima, o que perceberia?','','')}</div></div>
+${field('lea-maior','Eu sou mais do que esse sentimento porque…','também sou o menino que faz a gente rir…','')}</div>`,
+VAL:`<div class="sheet"><h3>Missão: calibrar a Bússola</h3><p>Escolha até 3 palavras que mostram o que é mais importante para você. Não existe resposta certa.</p>
+<div class="chips" id="valchips">${KID_VALUES.map(v=>`<button class="chip" data-val="${esc(v)}" aria-pressed="false">${v}</button>`).join('')}</div>
+<p class="count" id="valcount"></p>
+<div class="row2">${field('val-pessoas','Pessoas importantes para mim','minha avó, meu cachorro Thor…','')}${field('val-quem','Que tipo de amigo, filho ou aluno eu quero ser?','alguém que ajuda, que é engraçado…','')}</div>
+${field('val-gosto','Uma coisa que eu gosto muito de fazer, e o que ela tem de importante','Desenhar, porque eu invento mundos.','')}</div>`,
+VAI:`<div class="sheet"><h3>Missão: o próximo passo</h3><p>Olhe para a Bússola do VAL. Qual é um passo bem pequeno que você consegue dar esta semana nessa direção?</p>
+<p class="note" id="vai-dir"></p>
+${field('vai-passo','Meu passo','Chamar o João para brincar no recreio.','Pequeno o bastante para eu conseguir mesmo.')}
+<div class="row2">${field('vai-quando','Quando?','quarta-feira, no recreio','',0)}${field('vai-b','Plano B, se não der certo','Chamar a Bia na aula de educação física.','',0)}</div>
+<div class="stack"><b>Quanta coragem esse passo pede?</b><div class="thermo" id="thermo">${[1,2,3,4,5].map(n=>`<button data-t="${n}" aria-pressed="false">${n}</button>`).join('')}</div><div class="scale"><span>pouquinha</span><span>muita</span></div></div>
+<label class="done"><input type="checkbox" id="f-vai-feito" data-f="vai-feito"> Dei o passo!</label>
+${field('vai-como','Como foi?','Fiquei com vergonha no começo, mas…','')}</div>`
+};
+
+function cardHTML(c){
+ const body=c.v?`<span>${esc(c.v[0])}</span><small>Experimente</small><span>${esc(c.v[1])}</span><small>Para refletir</small><i>${esc(c.v[2])}</i>`:'';
+ const back=c.img?'':(c.v?`<div class="verso">${body}</div>`:(c.x?`<p>${esc(c.x)}</p>`:'<span class="pend">Verso em revisão</span>'));
+ return `<article class="card" data-c="${c.id}">${c.img?`<img class="art" data-open="${c.id}" data-side="front" src="${c.img}" alt="Carta ${c.id}: ${esc(c.t)}. Toque para ampliar" loading="lazy">`:''}${back}<div class="meta"><span>${c.lab||c.id}</span><span>${c.a}</span></div><b>${esc(c.t)}</b><div class="btns">${c.img?`<button class="flip" data-open="${c.id}" data-side="back">Ver verso</button>`:''}<button class="got-btn" data-got="${c.id}" aria-pressed="false">Fiz!</button></div></article>`;}
+function heroPanel(h){
+ const cards=CARDS[h.id]||[];
+ return `<section class="panel" id="p-${h.id}" role="tabpanel" data-h="${h.id}" hidden>
+ <div class="intro">${h.img?`<img class="portrait" src="${h.img}" alt="${h.id}">`:badge(h.id)}<div class="who"><span class="proc">${h.proc} · ${h.power}</span><span class="name">${h.id}</span><span class="motto">${h.motto}</span></div></div>
+ <p>${h.about}</p>
+ ${h.wide?`<img class="wide" src="${h.wide[0]}" alt="${esc(h.wide[1])}" loading="lazy">`:''}
+ ${ACT[h.id]}
+ <div class="stack"><div class="deckhead"><h3>Cartas do ${h.id}</h3><span class="count" id="cnt-${h.id}"></span></div>
+ <p class="note">Escolha uma carta, faça a missão e marque quando conseguir. Toque na carta para ampliar e em "Ver verso" para ler a atividade. As marcadas com 10+ são para quem já é maiorzinho ou para fazer com ajuda.</p>
+ <div class="deck">${cards.map(cardHTML).join('')}</div></div>
+ </section>`;
+}
+
+const TABS=[{id:'inicio',label:'Início'},...HEROES.map(h=>({id:h.id,label:h.id,h:h.id})),{id:'matriz',label:'A Matriz'},{id:'acao',label:'Herói em ação'},{id:'resumo',label:'Levar à sessão'}];
+document.getElementById('tabs').innerHTML=TABS.map((t,i)=>`<button class="tab" role="tab" id="t-${t.id}" data-tab="${t.id}" ${t.h?`data-h="${t.h}"`:''} aria-selected="${i===0}">${t.h?'<span class="dot"></span>':''}${t.label}</button>`).join('');
+
+const inicio=`<section class="panel" id="p-inicio" role="tabpanel">
+ <div class="stack"><h2>Conheça o Squad</h2>
+ <p>Seis heróis, cada um com um superpoder para lidar com pensamentos e sentimentos difíceis e seguir na direção do que importa. Toque em um herói para começar a missão dele.</p></div>
+ <div class="squad">${HEROES.map(h=>`<button class="hcard" data-h="${h.id}" data-go="${h.id}">${h.img?`<img class="portrait" src="${h.img}" alt="">`:badge(h.id)}<b>${h.id}</b><span class="pr">${h.proc}</span><span class="pw">${h.power}</span><span class="prog" id="prog-${h.id}"></span></button>`).join('')}</div>
+ <div class="sheet"><h3>Como usar</h3><p>Faça as missões na ordem que quiser, com calma, entre uma sessão e outra. Não tem resposta certa nem errada. Quando terminar, vá até "Levar à sessão" e mostre para sua terapeuta o que você descobriu.</p></div>
+ <div class="sheet"><h3>Por que esses nomes?</h3>
+ <p>Os nomes são curtos, fáceis de lembrar e ligados à habilidade da ACT que cada herói representa.</p>
+ <div class="names">${[['AKI','<b>Aqui</b>: estar aqui e agora, no momento presente.','Contato com o momento presente','AKI me traz para o presente.'],['COLE','<b>Acolher</b>: receber as emoções, em vez de lutar contra elas.','Aceitação','COLE me ajuda a acolher.'],['DE','<b>DEsfusão</b>: se distanciar dos pensamentos, sem precisar eliminá-los.','Desfusão cognitiva','DE me solta dos pensamentos.'],['LEA','<b>Lentes</b>: experimentar diferentes perspectivas e perceber que somos mais do que nossos pensamentos e sentimentos.','Eu como contexto','LEA amplia meu olhar.'],['VAL','<b>VALores</b>: descobrir o que importa e escolher uma direção.','Valores','VAL aponta o que importa.'],['VAI','<b>Vai!</b>: sair da intenção e dar passos concretos na direção do que importa.','Ação comprometida','VAI me coloca em movimento.']].map(([h,o,p,m])=>`<div class="nm" data-h="${h}"><span class="nh">${h}</span><div class="stack"><span>${o}</span><span class="note">${p}</span><i>${m}</i></div></div>`).join('')}</div>
+ <p class="note">VAL indica a direção. VAI transforma essa direção em ação.</p></div>
+ <div class="sheet adults"><h3>Para pais e terapeutas</h3><p>Cada herói representa um processo do hexaflex da ACT. As cartas vêm do banco do baralho ACT Squad (faixa 8+ e 10+). Sugerimos combinar com a criança um herói por semana e retomar na sessão a missão interativa e as cartas marcadas.</p></div>
+</section>`;
+const MQ=[
+ ['af','AKI','Ações de afastamento','O que eu faço para evitar, controlar ou fugir do que importa?','procrastinar, me isolar, desistir…','tl'],
+ ['ap','VAI','Ações de aproximação','Que passos posso dar em direção ao que importa?','experimentar, praticar, dar um passo pequeno…','tr'],
+ ['ei','COLE','Experiência interna que afasta','O que aparece dentro de mim e me distancia do que importa? (COLE acolhe, DE descola)','medo, vergonha, "não vou conseguir"…','bl'],
+ ['va','VAL','Valores','O que realmente importa para mim? Quem eu quero ser nesta situação?','amizade, coragem, família…','br']];
+const matriz=`<section class="panel" id="p-matriz" role="tabpanel" hidden>
+ <div class="stack"><h2>A Matriz</h2><p>Qual é a minha próxima escolha? Pense numa situação difícil e preencha os quatro cantos. No meio está o AKI, que ajuda você a perceber o que está acontecendo agora.</p></div>
+ <img class="wide" src="img/matriz2.webp" alt="Prancha Esquadrão da ACT, A Matriz: ações de afastamento, ações comprometidas, experiência interna que afasta e valores, com AKI no centro e LEA na faixa de perspectivas" loading="lazy">
+ <div class="sheet">${field('mx-sit','A situação','Amanhã tem apresentação de trabalho na escola.','',0)}
+ <div class="mx">${MQ.map(([k,h,ti,q,ph,pos])=>`<div class="mxq ${pos}" data-h="${h}"><b>${ti}</b><small>${q}</small>${[1,2,3].map(i=>`<textarea id="f-mx-${k}${i}" data-f="mx-${k}${i}" placeholder="${i===1?esc(ph):''}" aria-label="${ti} ${i}"></textarea>`).join('')}</div>`).join('')}
+ <div class="mxc" data-h="AKI"><b>AKI · Eu aqui</b><textarea id="f-mx-aki" data-f="mx-aki" placeholder="O que estou percebendo agora?" aria-label="Eu aqui"></textarea></div>
+ <div class="mxq lea" data-h="LEA"><b>LEA · Perspectivas</b><small>Amplie o olhar e escolha suas lentes. O que eu diria a um amigo? Que outras possibilidades existem?</small>${[1,2,3].map(i=>`<textarea id="f-mx-le${i}" data-f="mx-le${i}" placeholder="${i===1?'Eu diria a um amigo que…':''}" aria-label="Perspectivas ${i}"></textarea>`).join('')}</div></div>
+ <div class="mxax"><span>← Zona de afastamento</span><span>Zona de aproximação →</span></div>
+ ${field('mx-escolha','Minha próxima escolha','Vou ensaiar a apresentação com a minha mãe hoje.','Um passo pequeno para o lado direito da Matriz.')}</div>
+</section>`;
+const acao=`<section class="panel" id="p-acao" role="tabpanel" hidden>
+ <div class="stack"><h2>Herói em ação</h2><p>Os seis heróis juntos numa missão só. Pense numa situação difícil que está acontecendo e chame um herói de cada vez.</p></div>
+ <div class="sheet">${field('int-sit','A situação','Amanhã tenho apresentação na frente da turma.','')}
+ <div class="trail">${[['AKI','Percebo: o que estou vendo, ouvindo e sentindo agora?'],['COLE','Acolho: que sentimento chegou e onde ele está no corpo?'],['DE','Descolo: o que minha mente está dizendo? (Estou tendo o pensamento de que…)'],['LEA','Mudo a lente: como eu veria isso de longe ou pelos olhos de alguém que gosta de mim?'],['VAL','O que importa aqui? Que tipo de pessoa eu quero ser nessa situação?'],['VAI','Qual é o meu próximo passo pequeno?']].map(([id,q])=>`<div class="stepx" data-h="${id}">${badge(id)}<div class="stack"><b>${id}</b>${field('int-'+id,q,'','')}</div></div>`).join('')}</div></div>
+</section>`;
+const resumo=`<section class="panel" id="p-resumo" role="tabpanel" hidden>
+ <div class="stack"><h2>Levar à sessão</h2><p>Tudo o que você fez, juntinho em um texto. Copie e mande para sua terapeuta ou mostre na próxima sessão.</p></div>
+ <div class="sheet"><div class="actions"><button class="btn" id="copy">Copiar resumo</button><span class="note" id="copy-msg" aria-live="polite"></span></div><pre class="summary" id="summary"></pre></div>
+ <div class="sheet"><h3>Recomeçar</h3><p class="note">Apaga todas as respostas do paciente atual. Copie o resumo antes, se quiser guardar.</p>
+ <div><button class="btn danger" id="reset">Apagar minhas respostas</button></div>
+ <div class="confirm" id="confirm" hidden><span>Apagar tudo? Não dá para desfazer.</span><button class="btn danger" id="reset-yes">Sim, apagar</button><button class="btn ghost" id="reset-no">Cancelar</button></div></div>
+</section>`;
+document.getElementById('panels').innerHTML=inicio+HEROES.map(heroPanel).join('')+matriz+acao+resumo;
+
+/* tabs */
+function show(id){
+ TABS.forEach(t=>{const on=t.id===id;document.getElementById('t-'+t.id).setAttribute('aria-selected',on);document.getElementById('p-'+t.id).hidden=!on;});
+ if(id==='resumo')renderSummary(); if(id==='VAI')renderDir();
+ if(S.tab!==id){S.tab=id;save();}
+ try{history.replaceState(null,'','#'+id);}catch(e){}
+}
+document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){show(b.dataset.tab);}});
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){show(g.dataset.go);window.scrollTo({top:0});}});
+
+/* fields */
+document.querySelectorAll('[data-f]').forEach(el=>{
+ const k=el.dataset.f; if(el.type==='checkbox'){el.checked=!!S.f[k];el.addEventListener('change',()=>{S.f[k]=el.checked;save();});return;}
+ el.value=S.f[k]||''; el.addEventListener('input',()=>{S.f[k]=el.value;save(); if(k==='de-pens')renderDE(S.deMode);});
+});
+
+/* cards */
+function renderCounts(){HEROES.forEach(h=>{const n=(CARDS[h.id]||[]).filter(c=>S.got[c.id]).length,t=(CARDS[h.id]||[]).length;
+ document.getElementById('cnt-'+h.id).textContent=`${n} de ${t} feitas`;document.getElementById('prog-'+h.id).textContent=n?`${n} cartas feitas`:`${t} cartas`;});}
+function paintGot(){document.querySelectorAll('[data-got]').forEach(b=>{const on=!!S.got[b.dataset.got];b.closest('.card').classList.toggle('got',on);b.setAttribute('aria-pressed',on);b.textContent=on?'Feita ✓':'Fiz!';});}
+document.querySelectorAll('[data-got]').forEach(b=>{const id=b.dataset.got;
+ b.addEventListener('click',()=>{S.got[id]=!S.got[id];if(!S.got[id])delete S.got[id];save();paintGot();renderCounts();});});
+paintGot();renderCounts();
+
+/* body map */
+function paintBody(){document.querySelectorAll('[data-p]').forEach(p=>p.classList.toggle('on',S.body.includes(p.dataset.p)));document.querySelectorAll('[data-body]').forEach(c=>c.setAttribute('aria-pressed',S.body.includes(c.dataset.body)));}
+function toggleBody(k){S.body=S.body.includes(k)?S.body.filter(x=>x!==k):[...S.body,k];save();paintBody();}
+document.querySelectorAll('[data-p]').forEach(p=>p.addEventListener('click',()=>toggleBody(p.dataset.p)));
+document.querySelectorAll('[data-body]').forEach(c=>c.addEventListener('click',()=>toggleBody(c.dataset.body)));
+paintBody();
+
+/* viewer */
+const V={list:[],i:0,side:'front'};
+const vEl=document.getElementById('viewer'),vBig=document.getElementById('vbig');
+function vRender(){const c=V.list[V.i];const hero=c.id.split('-')[0].replace('DEX','DE');const fr=`border-image-source:url(img/versos/${hero}.webp)`;
+ if(V.side==='front'){vBig.innerHTML=`<div class="face front" style="${fr}"><img src="${c.img}" alt="Carta ${c.id}: ${esc(c.t)}"></div>`;}
+ else{const body=c.v?`${c.v[0]?`<span class="ab">${esc(c.v[0])}</span>`:''}<span class="lab">Experimente</span><span class="ex">${esc(c.v[1])}</span><span class="q">${esc(c.v[2])}</span>`:'<span class="pend">Verso em revisão.</span>';
+  vBig.innerHTML=`<div class="face back" style="${fr}"><div class="sc" id="vsc"><span class="id">${c.lab||c.id}${c.draft?' · rascunho':''}</span><h4>${esc(c.t)}</h4>${body}</div></div>`;
+  const sc=document.getElementById('vsc');const upd=()=>sc.classList.toggle('more',sc.scrollTop+sc.clientHeight<sc.scrollHeight-6);upd();sc.addEventListener('scroll',upd);}
+ document.getElementById('vflip').textContent=V.side==='front'?'Ver verso':'Ver frente';
+ document.getElementById('vpos').textContent=`${V.i+1} / ${V.list.length}`;}
+function vOpen(id,side){const hero=id.split('-')[0].replace('DEX','DE');V.list=(CARDS[hero]||[]).filter(c=>c.img);V.i=V.list.findIndex(c=>c.id===id);V.side=side;vEl.hidden=false;document.body.style.overflow='hidden';vRender();document.getElementById('vflip').focus();}
+function vClose(){vEl.hidden=true;document.body.style.overflow='';}
+document.addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o)vOpen(o.dataset.open,o.dataset.side);});
+document.getElementById('vflip').addEventListener('click',()=>{V.side=V.side==='front'?'back':'front';vRender();});
+document.getElementById('vprev').addEventListener('click',()=>{V.i=(V.i-1+V.list.length)%V.list.length;vRender();});
+document.getElementById('vnext').addEventListener('click',()=>{V.i=(V.i+1)%V.list.length;vRender();});
+document.getElementById('vclose').addEventListener('click',vClose);
+vEl.addEventListener('click',e=>{if(e.target===vEl)vClose();});
+vBig.addEventListener('click',e=>{if(V.side==='front'){V.side=V.side==='front'?'back':'front';vRender();}});
+document.addEventListener('keydown',e=>{if(vEl.hidden)return;if(e.key==='Escape')vClose();if(e.key==='ArrowRight')document.getElementById('vnext').click();if(e.key==='ArrowLeft')document.getElementById('vprev').click();});
+let tx=null;vBig.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+vBig.addEventListener('touchend',e=>{if(tx==null)return;const dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)>50)document.getElementById(dx<0?'vnext':'vprev').click();});
+
+/* values */
+function paintVals(){document.querySelectorAll('[data-val]').forEach(c=>c.setAttribute('aria-pressed',S.vals.includes(c.dataset.val)));
+ document.getElementById('valcount').textContent=S.vals.length?`Minha bússola aponta para: ${S.vals.join(', ')}`:'Nenhuma palavra escolhida ainda.';}
+document.querySelectorAll('[data-val]').forEach(c=>c.addEventListener('click',()=>{const v=c.dataset.val;
+ if(S.vals.includes(v))S.vals=S.vals.filter(x=>x!==v);else if(S.vals.length<3)S.vals=[...S.vals,v];else{document.getElementById('valcount').textContent='Já tem 3 palavras. Tire uma para trocar.';return;}save();paintVals();}));
+paintVals();
+function renderDir(){document.getElementById('vai-dir').textContent=S.vals.length?`Sua bússola aponta para: ${S.vals.join(', ')}.`:'Dica: escolha suas palavras na missão do VAL primeiro.';}
+
+/* thermometer */
+function paintTh(){document.querySelectorAll('[data-t]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.t===S.th));}
+document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{S.th=+b.dataset.t===S.th?0:+b.dataset.t;save();paintTh();}));paintTh();
+
+/* DE machine */
+function renderDE(m){const scr=document.getElementById('de-screen');const t=(S.f['de-pens']||'').trim();scr.className='screen';
+ if(!t){scr.textContent='Escreva um pensamento acima.';return;}
+ let out=t;
+ if(m==='tendo')out='Estou tendo o pensamento de que '+t.charAt(0).toLowerCase()+t.slice(1);
+ if(m==='robo'){out='BIP BOP. '+t+'. BIP.';scr.classList.add('robot');}
+ if(m==='lento'){out=t;scr.classList.add('slow');}
+ if(m==='mistura'){const w=t.replace(/[.!?]/g,'').split(/\s+/);for(let i=w.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[w[i],w[j]]=[w[j],w[i]];}out=w.join(' ');}
+ if(m==='mini'){scr.classList.add('tiny');}
+ if(m==='obrigado')out='Obrigado, mente, por "'+t+'". Agora eu escolho o que fazer.';
+ scr.textContent=out;}
+function paintDEBtns(){document.querySelectorAll('#de-btns [data-m]').forEach(x=>x.classList.toggle('ghost',x.dataset.m!==(S.deMode||'tendo')));}
+document.getElementById('de-btns').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;S.deMode=b.dataset.m;save();
+ paintDEBtns();renderDE(b.dataset.m);});
+renderDE(S.deMode);
+
+/* summary */
+function line(l,k){const v=(S.f[k]||'').trim();return v?`${l}: ${v}\n`:''}
+function renderSummary(){let o='ACT SQUAD · Minhas missões\n\n';
+ o+='AKI · Momento presente\n'+['5 coisas que vejo','4 sons','3 sensações','2 cheiros','1 sabor'].map((l,i)=>line(l,'aki'+i)).join('')+line('Hora do PAUSA','aki-pausa')+'\n';
+ o+='COLE · Aceitação\n'+line('Sentimento','cole-nome')+(S.body.length?`Onde no corpo: ${S.body.map(k=>BODY.find(b=>b[0]===k)[1]).join(', ')}\n`:'')+line('Se fosse uma coisa','cole-forma')+line('Mão que acolhe','cole-mao')+'\n';
+ o+='DE · Desfusão\n'+line('Pensamento','de-pens')+line('Título da história','de-titulo')+line('O que mudou','de-efeito')+'\n';
+ o+='LEA · Eu observador\n'+line('Situação','lea-cena')+line('Lente normal','lea-eu')+line('Lente do outro','lea-outro')+line('Lente observador','lea-longe')+line('Sou mais do que esse sentimento porque','lea-maior')+'\n';
+ o+='VAL · Valores\n'+(S.vals.length?`Minha bússola: ${S.vals.join(', ')}\n`:'')+line('Pessoas importantes','val-pessoas')+line('Quem quero ser','val-quem')+line('Algo que gosto de fazer','val-gosto')+'\n';
+ o+='VAI · Ação\n'+line('Meu passo','vai-passo')+line('Quando','vai-quando')+line('Plano B','vai-b')+(S.th?`Coragem necessária: ${S.th} de 5\n`:'')+(S.f['vai-feito']?'Dei o passo: sim\n':'')+line('Como foi','vai-como')+'\n';
+ const mx=line('Situação','mx-sit')+MQ.map(([k,h,ti])=>{const v=[1,2,3].map(i=>(S.f['mx-'+k+i]||'').trim()).filter(Boolean);return v.length?`${ti}: ${v.join('; ')}\n`:''}).join('')+line('Eu aqui','mx-aki')+(()=>{const v=[1,2,3].map(i=>(S.f['mx-le'+i]||'').trim()).filter(Boolean);return v.length?`Perspectivas (LEA): ${v.join('; ')}\n`:''})()+line('Minha próxima escolha','mx-escolha');
+ if(mx)o+='A MATRIZ\n'+mx+'\n';
+ const ints=['AKI','COLE','DE','LEA','VAL','VAI'].map(id=>line(id,'int-'+id)).join('');
+ if(ints||S.f['int-sit'])o+='HERÓI EM AÇÃO\n'+line('Situação','int-sit')+ints+'\n';
+ const got=Object.keys(S.got);if(got.length){o+='Cartas feitas\n';HEROES.forEach(h=>{const c=(CARDS[h.id]||[]).filter(c=>S.got[c.id]).map(c=>c.t);if(c.length)o+=`${h.id}: ${c.join(', ')}\n`;});}
+ document.getElementById('summary').textContent=o.trim();}
+document.getElementById('copy').addEventListener('click',()=>{const t=document.getElementById('summary').textContent,m=document.getElementById('copy-msg');
+ const sel=()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('summary'));const s=getSelection();s.removeAllRanges();s.addRange(r);m.textContent='Texto selecionado. Use copiar do seu aparelho.';};
+ try{navigator.clipboard.writeText(t).then(()=>m.textContent='Resumo copiado.',sel);}catch(e){sel();}});
+document.getElementById('reset').addEventListener('click',()=>document.getElementById('confirm').hidden=false);
+document.getElementById('reset-no').addEventListener('click',()=>document.getElementById('confirm').hidden=true);
+document.getElementById('reset-yes').addEventListener('click',()=>{S=normalize({tab:S.tab});save();
+ applyState();document.getElementById('confirm').hidden=true;});
+
+/* repinta toda a UI a partir de S (usado ao abrir paciente, ao zerar e ao sair) */
+function applyState(){
+ document.querySelectorAll('[data-f]').forEach(el=>{const k=el.dataset.f;if(el.type==='checkbox')el.checked=!!S.f[k];else el.value=S.f[k]||'';});
+ paintGot();renderCounts();paintBody();paintVals();paintTh();paintDEBtns();renderDE(S.deMode);renderDir();
+ if(!document.getElementById('p-resumo').hidden)renderSummary();
+ document.getElementById('confirm').hidden=true;}
+
+/* ===== Login, conta, termos e pacientes ===== */
+let phase='boot';   /* boot | auth | terms | app */
+let TERMS=null,authMode='login',editId=null,delId=null;
+const show$=(id,on)=>{$(id).hidden=!on;};
+const fmtDate=s=>{try{return new Date(s).toLocaleDateString('pt-BR');}catch(e){return '';}};
+const errTxt=e=>(e&&e.message)||'Algo deu errado. Tente de novo.';
+function flash(id,msg){const el=$(id);el.textContent=msg||'';el.hidden=!msg;}
+
+$('authBadges').innerHTML=HEROES.map(h=>badge(h.id)).join('');
+
+function setAuthMode(m){
+ authMode=m;const reg=m==='register';
+ $('authTabLogin').setAttribute('aria-selected',!reg);$('authTabReg').setAttribute('aria-selected',reg);
+ $('authTitle').textContent=reg?'Criar conta':'Entrar';
+ $('authLede').textContent=reg?'Crie sua conta para guardar o caderno de cada paciente com segurança.':'Use seu e-mail e senha para abrir o caderno e os pacientes da sua conta.';
+ show$('authNameWrap',reg);show$('authPassHint',reg);
+ $('authPass').autocomplete=reg?'new-password':'current-password';
+ $('authSubmit').textContent=reg?'Criar conta':'Entrar';
+ flash('authErr','');}
+document.querySelectorAll('[data-auth]').forEach(b=>b.addEventListener('click',()=>setAuthMode(b.dataset.auth)));
+
+/* Portão: só o #authView aparece; o caderno (.wrap) fica escondido */
+function showAuth(msg){
+ phase='auth';ready=false;dirty=false;clearTimeout(saveT);clearTimeout(retryT);
+ vClose();document.documentElement.classList.remove('booting');
+ S=normalize({});curPid=null;PATS=[];TERMS=null;applyState();
+ show$('authView',true);show$('wrap',false);
+ $('authPass').value='';flash('authErr',msg||'');
+ if(!location.hash){try{history.replaceState(null,'','#login');}catch(e){}}}   /* mantém links como #AKI para depois do login */
+function showWrap(){document.documentElement.classList.remove('booting');show$('authView',false);show$('wrap',true);renderPbar();}
+
+function renderPbar(){
+ const inApp=phase==='app';
+ show$('pbar',phase==='app'||phase==='terms');
+ show$('pacSelWrap',inApp);show$('lnkPac',inApp);show$('lnkConta',inApp);
+ const sel=$('pacSel');
+ sel.innerHTML=PATS.map(p=>`<option value="${esc(p.id)}">${esc(p.displayName)}${p.isDefault?' (padrão)':''}</option>`).join('');
+ if(curPid)sel.value=curPid;
+ const h=(location.hash||'').slice(1);
+ $('lnkPac').toggleAttribute('aria-current',false);$('lnkConta').toggleAttribute('aria-current',false);
+ if(h==='pacientes')$('lnkPac').setAttribute('aria-current','page');
+ if(h==='conta')$('lnkConta').setAttribute('aria-current','page');}
+
+function showPac(sub){
+ show$('tabs',false);show$('panels',false);show$('pacView',true);
+ show$('termsBox',sub==='termos');show$('patBox',sub==='pacientes');show$('contaBox',sub==='conta');
+ const locked=phase!=='app';
+ show$('btnVoltar',!locked);
+ document.querySelectorAll('#psub [data-sub]').forEach(a=>{a.hidden=locked;a.toggleAttribute('aria-current',false);if(a.dataset.sub===sub)a.setAttribute('aria-current','page');});
+ if(sub==='termos')renderTerms();if(sub==='pacientes')renderPats();if(sub==='conta')renderConta();
+ renderPbar();window.scrollTo({top:0});}
+function hidePac(){show$('pacView',false);show$('tabs',true);show$('panels',true);renderPbar();}
+
+/* rotas por hash: #login #conta #pacientes #termos e as abas do caderno */
+function route(){
+ const h=(location.hash||'').slice(1);
+ if(phase==='boot')return;
+ if(phase==='auth'){showAuth($('authErr').hidden?'':$('authErr').textContent);return;}
+ showWrap();
+ if(phase==='terms'){showPac('termos');return;}
+ if(h==='pacientes'||h==='conta'||h==='termos'){showPac(h);return;}
+ hidePac();
+ show(TABS.some(t=>t.id===h)?h:(S.tab&&TABS.some(t=>t.id===S.tab)?S.tab:'inicio'));}
+window.addEventListener('hashchange',route);
+
+/* termos */
+function renderTerms(){
+ const ok=!!(TERMS&&TERMS.accepted);
+ $('termsVer').textContent=TERMS?`Versão ${TERMS.currentVersion}`:'';
+ show$('termsChkWrap',!ok);show$('termsBtn',!ok);show$('termsDone',ok);
+ $('termsDone').textContent=ok?`Aceito em ${fmtDate(TERMS.acceptedAt)}.`:'';
+ $('termsChk').checked=false;$('termsBtn').disabled=true;flash('termsErr','');}
+$('termsChk').addEventListener('change',()=>{$('termsBtn').disabled=!$('termsChk').checked;});
+$('termsBtn').addEventListener('click',async()=>{
+ const b=$('termsBtn');b.disabled=true;flash('termsErr','');
+ try{
+  TERMS=await Api.acceptTerms(TERMS&&TERMS.currentVersion);
+  if(phase==='terms'){await openPatient(pickPatient());phase='app';}
+  route();
+ }catch(e){flash('termsErr',errTxt(e));b.disabled=!$('termsChk').checked;}});
+
+/* conta */
+function renderConta(){
+ const u=Api.user||{};
+ $('contaKv').innerHTML=`<dt>Nome</dt><dd>${esc(u.name||'—')}</dd><dt>E-mail</dt><dd>${esc(u.email||'')}</dd><dt>Termos</dt><dd>${TERMS&&TERMS.accepted?`Versão ${esc(TERMS.currentVersion)}, aceitos em ${esc(fmtDate(TERMS.acceptedAt))}`:'Ainda não aceitos'}</dd><dt>Pacientes</dt><dd>${PATS.length}</dd>`;}
+
+/* pacientes */
+function pickPatient(){
+ let id=null;try{id=localStorage.getItem(PAC_KEY);}catch(e){}
+ const p=PATS.find(x=>x.id===id)||PATS.find(x=>x.isDefault)||PATS[0];
+ return p&&p.id;}
+async function loadPatients(){PATS=await Api.listPatients()||[];}
+async function openPatient(id){
+ if(!id)throw new Error('Nenhum paciente encontrado.');
+ await flush();                       /* garante que o paciente anterior foi gravado */
+ const was=ready;ready=false;
+ let st;try{st=await Api.getState(id);}catch(e){ready=was&&!!curPid;throw e;}
+ curPid=id;try{localStorage.setItem(PAC_KEY,id);}catch(e){}
+ S=normalize(st);applyState();dirty=false;ready=true;
+ setSS('Salvo na conta · paciente: '+curName());renderPbar();}
+$('pacSel').addEventListener('change',async()=>{
+ const sel=$('pacSel'),id=sel.value,prev=curPid;if(id===prev)return;
+ $('pbar').classList.add('busy');
+ try{await openPatient(id);route();}
+ catch(e){ready=!!curPid;sel.value=prev;setSS('Não consegui trocar de paciente: '+errTxt(e));}
+ finally{$('pbar').classList.remove('busy');}});
+
+function patItem(p){
+ const cur=p.id===curPid;
+ if(editId===p.id)return `<li class="pitem${cur?' cur':''}"><form class="stack" data-edit="${esc(p.id)}"><div class="row2"><label class="field"><b>Nome ou apelido</b><input class="inp" type="text" name="n" maxlength="60" required value="${esc(p.displayName)}"></label><label class="field"><b>Observação</b><input class="inp" type="text" name="o" maxlength="120" value="${esc(p.note||'')}"></label></div><div class="actions"><button class="btn sm" type="submit">Salvar</button><button class="btn sm ghost" type="button" data-act="edit-no">Cancelar</button></div></form></li>`;
+ const del=delId===p.id?`<div class="confirm"><span>Excluir ${esc(p.displayName)} e todas as respostas? Não dá para desfazer.</span><button class="btn sm danger" type="button" data-act="del-yes" data-id="${esc(p.id)}">Sim, excluir</button><button class="btn sm ghost" type="button" data-act="del-no">Cancelar</button></div>`:'';
+ return `<li class="pitem${cur?' cur':''}" data-id="${esc(p.id)}"><div class="ph"><span class="pn">${esc(p.displayName)}</span>${p.isDefault?'<span class="tag">padrão</span>':''}${cur?'<span class="tag on">aberto</span>':''}</div>${p.note?`<span class="pnote">${esc(p.note)}</span>`:''}<div class="actions"><button class="btn sm" type="button" data-act="open" data-id="${esc(p.id)}">${cur?'Voltar ao caderno':'Abrir caderno'}</button><button class="btn sm ghost" type="button" data-act="edit" data-id="${esc(p.id)}">Editar</button><button class="btn sm danger" type="button" data-act="del" data-id="${esc(p.id)}"${PATS.length<2?' disabled title="Crie outro paciente antes de excluir este"':''}>Excluir</button></div>${del}</li>`;}
+function renderPats(){$('patList').innerHTML=PATS.map(patItem).join('');}
+
+$('patList').addEventListener('click',async e=>{
+ const b=e.target.closest('[data-act]');if(!b)return;
+ const act=b.dataset.act,id=b.dataset.id;flash('patErr','');
+ if(act==='edit'){editId=id;delId=null;renderPats();}
+ else if(act==='edit-no'){editId=null;renderPats();}
+ else if(act==='del'){delId=id;editId=null;renderPats();}
+ else if(act==='del-no'){delId=null;renderPats();}
+ else if(act==='open'){
+  b.disabled=true;
+  try{if(id!==curPid)await openPatient(id);location.hash='#'+(S.tab&&TABS.some(t=>t.id===S.tab)?S.tab:'inicio');}
+  catch(err){flash('patErr',errTxt(err));b.disabled=false;}}
+ else if(act==='del-yes'){
+  b.disabled=true;
+  try{
+   await Api.deletePatient(id);delId=null;
+   await loadPatients();
+   if(id===curPid){curPid=null;ready=false;dirty=false;clearTimeout(saveT);await openPatient(pickPatient());}
+   renderPbar();renderPats();
+  }catch(err){flash('patErr',errTxt(err));b.disabled=false;}}});
+$('patList').addEventListener('submit',async e=>{
+ const f=e.target.closest('form[data-edit]');if(!f)return;e.preventDefault();
+ const name=f.n.value.trim();if(!name){flash('patErr','Dê um nome ou apelido ao paciente.');return;}
+ try{await Api.updatePatient(f.dataset.edit,{displayName:name,note:f.o.value.trim()});editId=null;await loadPatients();renderPbar();renderPats();flash('patErr','');}
+ catch(err){flash('patErr',errTxt(err));}});
+$('patForm').addEventListener('submit',async e=>{
+ e.preventDefault();const name=$('patName').value.trim();
+ if(!name){flash('patErr','Dê um nome ou apelido ao paciente.');$('patName').focus();return;}
+ const b=$('patAdd');b.disabled=true;flash('patErr','');
+ try{await Api.createPatient(name,$('patNote').value.trim());$('patName').value='';$('patNote').value='';await loadPatients();renderPbar();renderPats();}
+ catch(err){flash('patErr',errTxt(err));}
+ finally{b.disabled=false;}});
+$('btnVoltar').addEventListener('click',()=>{location.hash='#'+(S.tab&&TABS.some(t=>t.id===S.tab)?S.tab:'inicio');});
+
+/* login / cadastro */
+async function enterApp(){
+ try{localStorage.removeItem(KEY);}catch(e){}      /* o caderno antigo (act-squad-v1) deixa de existir no aparelho */
+ TERMS=await Api.termsStatus();
+ await loadPatients();
+ if(!TERMS.accepted){phase='terms';route();return;}
+ await openPatient(pickPatient());
+ phase='app';route();}
+$('authForm').addEventListener('submit',async e=>{
+ e.preventDefault();flash('authErr','');
+ const email=$('authEmail').value.trim(),pass=$('authPass').value,name=$('authName').value.trim();
+ if(!email||!pass){flash('authErr','Preencha e-mail e senha.');return;}
+ if(authMode==='register'&&pass.length<8){flash('authErr','A senha precisa ter pelo menos 8 caracteres.');return;}
+ const b=$('authSubmit');b.disabled=true;
+ try{
+  Api.clearSession();
+  const r=authMode==='register'?await Api.register(email,pass,name||null):await Api.login(email,pass);
+  Api.saveSession(r.token,r.user);
+  $('authPass').value='';
+  await enterApp();
+ }catch(err){flash('authErr',errTxt(err));}
+ finally{b.disabled=false;}});
+
+async function logout(){
+ try{await flush();}catch(e){}
+ Api.clearSession();try{localStorage.removeItem(PAC_KEY);}catch(e){}
+ showAuth('');setAuthMode('login');}
+$('btnSair').addEventListener('click',logout);$('btnSair2').addEventListener('click',logout);
+window.addEventListener('actsquad:unauthorized',()=>{if(phase!=='auth'&&phase!=='boot')showAuth('Sua sessão expirou. Entre de novo.');});
+
+/* não perder alterações ao fechar ou esconder a aba */
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&dirty&&ready)flush().catch(()=>{});});
+window.addEventListener('pagehide',()=>{if(dirty&&ready&&curPid){try{Api.putState(curPid,S,{keepalive:true}).catch(()=>{});}catch(e){}}});
+
+/* boot: sem sessão só o login aparece; com sessão valida /me, termos, pacientes e estado */
+(async function boot(){
+ if(!Api.loggedIn()){showAuth('');return;}
+ try{
+  const me=await Api.me();Api.saveSession(Api.token,me);
+  await enterApp();
+ }catch(e){
+  if(!Api.loggedIn())showAuth('Sua sessão expirou. Entre de novo.');
+  else showAuth(errTxt(e));}})();
+})();
+</script>
+
+</body></html>

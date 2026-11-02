@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: act
+      POSTGRES_USER: ${POSTGRES_USER:-act}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}
+    volumes:
+      - act-pgdata:/var/lib/postgresql/data
+      - ./app/sql/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+      - ./app/sql/002_seed_demo.sql:/docker-entrypoint-initdb.d/002_seed_demo.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d act"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ./act-api
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/act
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-act}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}
+      ACT_JWT_SECRET: ${ACT_JWT_SECRET:?Defina ACT_JWT_SECRET}
+      ACT_TERMS_VERSION: ${ACT_TERMS_VERSION:-2026-10}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8089:8080"
+    expose:
+      - "8080"
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    depends_on:
+      - api
+
+volumes:
+  act-pgdata:

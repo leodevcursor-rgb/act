@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: act-api
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  flyway:
+    enabled: false
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+act:
+  jwt:
+    secret: ${ACT_JWT_SECRET:act-dev-secret-change-me-min-32-chars!!!!!}
+    expiration-ms: ${ACT_JWT_EXPIRATION_MS:86400000}
+  terms-version: ${ACT_TERMS_VERSION:2026-10}

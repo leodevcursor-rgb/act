@@ -1,0 +1,9 @@
+.env
+**/.env
+act-api/target/
+target/
+.idea/
+*.iml
+.vscode/
+*.log
+node_modules/
