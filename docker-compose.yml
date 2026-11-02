@@ -1,6 +1,12 @@
+# Stack isolada do ACT Squad — não compartilha rede, volume nem containers com a Odisseia.
+# Odisseia: projeto odisseia, porta host 80, volume odisseia-pgdata
+# ACT:     projeto act,     porta host 8088, volume act-pgdata
+name: act
+
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: act-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: act
@@ -10,6 +16,9 @@ services:
       - act-pgdata:/var/lib/postgresql/data
       - ./app/sql/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
       - ./app/sql/002_seed_demo.sql:/docker-entrypoint-initdb.d/002_seed_demo.sql:ro
+    networks:
+      - act-net
+    # Postgres só na rede interna do ACT (não publica porta no host)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d act"]
       interval: 5s
@@ -19,6 +28,7 @@ services:
   api:
     build:
       context: ./act-api
+    container_name: act-api
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -30,8 +40,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    ports:
-      - "8089:8080"
+    networks:
+      - act-net
+    # API só interna; o nginx (web) faz proxy de /api/
     expose:
       - "8080"
 
@@ -39,11 +50,21 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile
+    container_name: act-web
     restart: unless-stopped
     ports:
-      - "8088:80"
+      # Host dedicado do ACT (Odisseia usa 80)
+      - "${ACT_HOST_PORT:-8088}:80"
     depends_on:
       - api
+    networks:
+      - act-net
+
+networks:
+  act-net:
+    name: act-net
+    driver: bridge
 
 volumes:
   act-pgdata:
+    name: act-pgdata

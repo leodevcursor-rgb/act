@@ -8,7 +8,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Publicar no VPS
+      - name: Publicar ACT no VPS (isolado da Odisseia)
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: 200.141.20.75
@@ -17,6 +17,9 @@ jobs:
           command_timeout: 30m
           script: |
             set -euo pipefail
+            # Isolamento: NUNCA tocar em /opt/odisseia-src, containers odisseia-* ou volume odisseia-pgdata.
+            # ACT vive em /opt/act-src, projeto Docker "act", porta ${ACT_HOST_PORT:-8088}.
+
             if ! command -v git >/dev/null; then
               apt-get update
               apt-get install -y git
@@ -27,22 +30,29 @@ jobs:
             fi
             git -C /opt/act-src fetch origin main
             git -C /opt/act-src reset --hard origin/main
+
             umask 077
-            cat > /opt/act-src/.env <<'EOF'
+            cat > /opt/act-src/.env <<EOF
             POSTGRES_USER=act
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             ACT_JWT_SECRET=${{ secrets.ACT_JWT_SECRET }}
             ACT_TERMS_VERSION=2026-10
+            ACT_HOST_PORT=8088
             EOF
+
             systemctl enable --now docker
-            docker compose -f /opt/act-src/docker-compose.yml --project-directory /opt/act-src up -d --build
-            docker compose -f /opt/act-src/docker-compose.yml --project-directory /opt/act-src ps
-            for i in 1 2 3 4 5 6 7 8 9 10; do
+
+            # -p act = nome do projeto Compose (não conflita com odisseia)
+            docker compose -p act -f /opt/act-src/docker-compose.yml --project-directory /opt/act-src up -d --build
+            docker compose -p act -f /opt/act-src/docker-compose.yml --project-directory /opt/act-src ps
+
+            for i in 1 2 3 4 5 6 7 8 9 10 11 12 15 18 20; do
               html=$(curl -fsS http://127.0.0.1:8088/ || true)
               if echo "$html" | grep -F 'id="authFormBox"' >/dev/null; then
+                echo "ACT OK em :8088 (Odisseia permanece em :80)."
                 exit 0
               fi
               sleep 3
             done
-            echo "A porta 8088 nao esta servindo a versao nova."
+            echo "A porta 8088 nao esta servindo o ACT."
             exit 1

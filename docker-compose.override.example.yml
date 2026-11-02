@@ -1,0 +1,7 @@
+# Copie para docker-compose.override.yml só em desenvolvimento local
+# se quiser expor a API direto na porta 8089 (fora do nginx).
+# Em produção (Hostinger) este arquivo NÃO deve existir.
+services:
+  api:
+    ports:
+      - "8089:8080"
