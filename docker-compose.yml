@@ -16,6 +16,7 @@ services:
       - act-pgdata:/var/lib/postgresql/data
       - ./app/sql/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
       - ./app/sql/002_seed_demo.sql:/docker-entrypoint-initdb.d/002_seed_demo.sql:ro
+      - ./app/sql/003_patient_accounts.sql:/docker-entrypoint-initdb.d/003_patient_accounts.sql:ro
     networks:
       - act-net
     # Postgres só na rede interna do ACT (não publica porta no host)

@@ -7,7 +7,11 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 DO $$ BEGIN
-  CREATE TYPE user_role AS ENUM ('therapist', 'admin');
+  CREATE TYPE user_role AS ENUM ('therapist', 'admin', 'patient');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TYPE user_role ADD VALUE 'patient';
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
@@ -57,11 +61,14 @@ CREATE TABLE IF NOT EXISTS patients (
   display_name    TEXT NOT NULL,
   note            TEXT,
   is_default      BOOLEAN NOT NULL DEFAULT false,
+  cpf_digits      VARCHAR(11),
+  account_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   archived_at     TIMESTAMPTZ,
   CONSTRAINT patients_display_name_len CHECK (char_length(display_name) BETWEEN 1 AND 60),
-  CONSTRAINT patients_note_len CHECK (note IS NULL OR char_length(note) <= 120)
+  CONSTRAINT patients_note_len CHECK (note IS NULL OR char_length(note) <= 120),
+  CONSTRAINT patients_cpf_digits_len CHECK (cpf_digits IS NULL OR char_length(cpf_digits) = 11)
 );
 
 CREATE INDEX IF NOT EXISTS idx_patients_user ON patients (user_id);
@@ -71,6 +78,14 @@ CREATE INDEX IF NOT EXISTS idx_patients_user_updated ON patients (user_id, updat
 -- No máximo um paciente padrão (não arquivado) por usuário
 CREATE UNIQUE INDEX IF NOT EXISTS uq_patients_user_default ON patients (user_id)
   WHERE is_default AND archived_at IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_patients_account_user
+  ON patients (account_user_id)
+  WHERE account_user_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_patients_cpf_digits
+  ON patients (cpf_digits)
+  WHERE cpf_digits IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS patient_states (
   patient_id      UUID PRIMARY KEY REFERENCES patients(id) ON DELETE CASCADE,

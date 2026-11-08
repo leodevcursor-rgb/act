@@ -16,22 +16,35 @@ public class UserPrincipal implements UserDetails {
   private final String passwordHash;
   private final UserRole role;
   private final boolean active;
+  private final UUID patientId;
 
-  public UserPrincipal(UUID id, String email, String passwordHash, UserRole role, boolean active) {
+  public UserPrincipal(
+      UUID id,
+      String email,
+      String passwordHash,
+      UserRole role,
+      boolean active,
+      UUID patientId) {
     this.id = id;
     this.email = email;
     this.passwordHash = passwordHash;
     this.role = role;
     this.active = active;
+    this.patientId = patientId;
   }
 
   public static UserPrincipal from(AppUser user) {
+    return from(user, null);
+  }
+
+  public static UserPrincipal from(AppUser user, UUID patientId) {
     return new UserPrincipal(
         user.getId(),
         user.getEmail(),
         user.getPasswordHash(),
         user.getRole(),
-        user.isActive());
+        user.isActive(),
+        patientId);
   }
 
   public UUID getId() {
@@ -40,6 +53,18 @@ public class UserPrincipal implements UserDetails {
 
   public UserRole getRole() {
     return role;
+  }
+
+  public UUID getPatientId() {
+    return patientId;
+  }
+
+  public boolean isPatient() {
+    return role == UserRole.patient;
+  }
+
+  public boolean isTherapist() {
+    return role == UserRole.therapist || role == UserRole.admin;
   }
 
   @Override

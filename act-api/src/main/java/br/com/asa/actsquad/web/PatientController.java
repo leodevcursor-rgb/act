@@ -33,38 +33,42 @@ public class PatientController {
 
   @GetMapping
   public List<PatientDto> list() {
+    SecurityUtils.requireTherapist();
     return patientService.list(SecurityUtils.currentUserId());
   }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public PatientDto create(@Valid @RequestBody CreatePatientRequest request) {
+    SecurityUtils.requireTherapist();
     return patientService.create(SecurityUtils.currentUserId(), request);
   }
 
   @GetMapping("/{id}")
   public PatientDto get(@PathVariable UUID id) {
-    return patientService.get(SecurityUtils.currentUserId(), id);
+    return patientService.get(SecurityUtils.currentUser(), id);
   }
 
   @PatchMapping("/{id}")
   public PatientDto update(@PathVariable UUID id, @Valid @RequestBody UpdatePatientRequest request) {
+    SecurityUtils.requireTherapist();
     return patientService.update(SecurityUtils.currentUserId(), id, request);
   }
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void delete(@PathVariable UUID id) {
+    SecurityUtils.requireTherapist();
     patientService.delete(SecurityUtils.currentUserId(), id);
   }
 
   @GetMapping("/{id}/state")
   public JsonNode getState(@PathVariable UUID id) {
-    return patientService.getState(SecurityUtils.currentUserId(), id);
+    return patientService.getState(SecurityUtils.currentUser(), id);
   }
 
   @PutMapping("/{id}/state")
   public JsonNode putState(@PathVariable UUID id, @RequestBody JsonNode body) {
-    return patientService.putState(SecurityUtils.currentUserId(), id, body);
+    return patientService.putState(SecurityUtils.currentUser(), id, body);
   }
 }

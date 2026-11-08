@@ -11,4 +11,12 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
   List<Patient> findByUserIdAndArchivedAtIsNullOrderByCreatedAtAsc(UUID userId);
 
   Optional<Patient> findByIdAndUserId(UUID id, UUID userId);
+
+  Optional<Patient> findByIdAndAccountUserId(UUID id, UUID accountUserId);
+
+  Optional<Patient> findByAccountUserId(UUID accountUserId);
+
+  Optional<Patient> findByCpfDigits(String cpfDigits);
+
+  boolean existsByCpfDigits(String cpfDigits);
 }

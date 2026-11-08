@@ -147,21 +147,19 @@ textarea{min-height:72px;resize:vertical}
 /* card viewer (tela cheia) */
 .viewer{position:fixed;inset:0;z-index:20;background:rgba(10,14,28,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px calc(env(safe-area-inset-bottom,0px) + 12px)}
 .viewer[hidden]{display:none!important}
-.viewer{--w:min(520px,calc(100vw - 32px))}
-.viewer{--w:min(400px,calc(100vw - 32px),calc((100dvh - 110px)/1.45))}
-.big{width:var(--w);height:calc(var(--w)*1.45);border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.35)}
-.face{width:100%;height:100%;box-sizing:border-box;border-style:solid;border-image-repeat:stretch;color:#2a2230}
-.face.front{border-width:0 0 calc(var(--w)*.45) 0;border-image-slice:30% 0 31% 0 fill}
-.face.front img{width:100%;height:100%;object-fit:cover;display:block}
-.face.back{border-width:calc(var(--w)*.30) calc(var(--w)*.105) calc(var(--w)*.27);border-image-slice:30% 12% 31% fill;overflow:hidden}
-.face.back .sc{height:100%;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:0 2px 10px;scrollbar-width:thin}
-.face.back .sc.more{-webkit-mask-image:linear-gradient(#000 82%,transparent);mask-image:linear-gradient(#000 82%,transparent)}
-.face.back .id{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#7a6c7d}
-.face.back h4{margin:-3px 0 0;font-family:var(--display);font-weight:800;font-size:clamp(19px,5.4vw,23px);line-height:1.1;color:#2a2230;text-wrap:balance}
-.face.back .ab{font-size:clamp(13.5px,3.75vw,15.5px);line-height:1.38;font-style:italic;color:#463a4a}
-.face.back .lab{align-self:flex-start;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#2a2230;background:rgba(42,34,48,.08);padding:3px 9px;border-radius:999px;margin-top:2px}
-.face.back .ex{font-size:clamp(13.5px,3.75vw,15.5px);line-height:1.4}
-.face.back .q{font-family:var(--display);font-weight:700;font-size:clamp(15px,4.2vw,17px);line-height:1.25;border-top:1.5px dashed rgba(42,34,48,.25);padding-top:9px;margin-top:2px}
+.viewer{--w:min(420px,calc(100vw - 32px),calc((100dvh - 100px)/1.4))}
+.big{width:var(--w);height:calc(var(--w)*1.4);border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.35);position:relative}
+.face{width:100%;height:100%;box-sizing:border-box;color:#2a2230}
+.face.front{position:relative;overflow:hidden;background-size:100% 100%;background-repeat:no-repeat;background-color:#fbf5ea}
+.big{--y:16.5%;--sz:92%;--ft:5%;--fb:30%;--fs:15%}
+.face.front img{position:absolute;left:50%;top:var(--y);width:var(--sz);height:calc(var(--sz)*.685);object-fit:cover;object-position:center top;transform:translateX(-50%);display:block;border-radius:22%;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--ft),#000 calc(100% - var(--fb)),transparent 100%),linear-gradient(to right,transparent 0,#000 var(--fs),#000 calc(100% - var(--fs)),transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to bottom,transparent 0,#000 var(--ft),#000 calc(100% - var(--fb)),transparent 100%),linear-gradient(to right,transparent 0,#000 var(--fs),#000 calc(100% - var(--fs)),transparent 100%);mask-composite:intersect}
+.face.back{border-style:solid;border-image-repeat:stretch;border-width:calc(var(--w)*.31) calc(var(--w)*.105) calc(var(--w)*.26);border-image-slice:30% 12% 31% fill;overflow:hidden}
+.face.back .sc{height:100%;display:flex;flex-direction:column;justify-content:center;gap:.55em;font-size:15px;overflow:hidden}
+.face.back h4{margin:0;font-family:var(--display);font-weight:800;font-size:1.45em;line-height:1.1;color:#2a2230;text-wrap:balance}
+.face.back .ab{line-height:1.36;font-style:italic;color:#463a4a}
+.face.back .lab{align-self:flex-start;font-size:.7em;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#2a2230;background:rgba(42,34,48,.08);padding:.25em .7em;border-radius:999px}
+.face.back .ex{line-height:1.4}
+.face.back .q{font-family:var(--display);font-weight:700;font-size:1.1em;line-height:1.25;border-top:1.5px dashed rgba(42,34,48,.25);padding-top:.6em}
 .face.back .pend{font-size:15px;color:#7a6c7d}
 .vbar{display:flex;gap:8px;align-items:center;justify-content:center;width:var(--w)}
 .vbar .btn{font-size:15px;padding:7px 16px}
@@ -273,11 +271,11 @@ select.inp{appearance:auto;cursor:pointer}
         <button type="button" class="tab" role="tab" id="authTabReg" data-auth="register" aria-selected="false">Criar conta</button>
       </div>
       <h2 id="authTitle">Entrar</h2>
-      <p class="note" id="authLede">Use seu e-mail e senha para abrir o caderno e os pacientes da sua conta.</p>
+      <p class="note" id="authLede">Terapeuta: e-mail e senha. Paciente: nome e CPF.</p>
       <form id="authForm" novalidate>
         <label class="field" id="authNameWrap" hidden><b>Seu nome</b><input class="inp" type="text" id="authName" autocomplete="name" maxlength="120" placeholder="Como quer ser chamado(a)"></label>
-        <label class="field"><b>E-mail</b><input class="inp" type="email" id="authEmail" autocomplete="username" inputmode="email" required placeholder="voce@exemplo.com"></label>
-        <label class="field"><b>Senha</b><input class="inp" type="password" id="authPass" autocomplete="current-password" required minlength="8" placeholder="Mínimo de 8 caracteres"><small id="authPassHint" hidden>Use pelo menos 8 caracteres.</small></label>
+        <label class="field" id="authLoginField"><b id="authLoginLabel">E-mail ou nome</b><input class="inp" type="text" id="authEmail" autocomplete="username" required placeholder="voce@exemplo.com"></label>
+        <label class="field" id="authPassField"><b id="authPassLabel">Senha ou CPF</b><input class="inp" type="password" id="authPass" autocomplete="current-password" required placeholder="Senha ou CPF"><small id="authPassHint" hidden>Use pelo menos 8 caracteres.</small></label>
         <div class="msg err" id="authErr" role="alert" hidden></div>
         <div class="actions"><button class="btn" type="submit" id="authSubmit">Entrar</button></div>
       </form>
@@ -333,10 +331,12 @@ select.inp{appearance:auto;cursor:pointer}
       <ul class="plist" id="patList"></ul>
       <form class="stack" id="patForm" novalidate>
         <h3>Novo paciente</h3>
+        <p class="note">O paciente entra com o <b>nome</b> e o <b>CPF</b> (somente leitura: vê o caderno, sem alterar).</p>
         <div class="row2">
           <label class="field"><b>Nome ou apelido</b><input class="inp" type="text" id="patName" maxlength="60" required placeholder="Ex.: Bia"></label>
-          <label class="field"><b>Observação</b><small>Opcional, até 120 letras.</small><input class="inp" type="text" id="patNote" maxlength="120" placeholder="Ex.: terças, 15h"></label>
+          <label class="field"><b>CPF</b><input class="inp" type="text" id="patCpf" maxlength="14" inputmode="numeric" required placeholder="000.000.000-00" autocomplete="off"></label>
         </div>
+        <label class="field"><b>Observação</b><small>Opcional, até 120 letras.</small><input class="inp" type="text" id="patNote" maxlength="120" placeholder="Ex.: terças, 15h"></label>
         <div class="actions"><button class="btn" type="submit" id="patAdd">Adicionar paciente</button></div>
       </form>
     </div>
@@ -398,19 +398,30 @@ let S=normalize({});
 let curPid=null,PATS=[],ready=false,dirty=false,saveT=null,retryT=null,inflight=null;
 const setSS=t=>{$('savestate').textContent=t;};
 const curName=()=>{const p=PATS.find(x=>x.id===curPid);return p?p.displayName:'paciente';};
+function isPatientReadonly(){return !!(Api&&Api.user&&Api.user.role==='patient');}
+function blockReadonly(msg){if(!isPatientReadonly())return false;setSS(msg||'Conta somente leitura: o caderno não pode ser alterado.');return true;}
+function syncReadonlyUi(){
+ const ro=isPatientReadonly();
+ document.body.classList.toggle('patient-ro',ro);
+ document.querySelectorAll('#panels input,#panels textarea,#panels select,#panels button[data-f],#panels [data-p],#panels [data-t],#panels [data-m],#panels [data-h]').forEach(el=>{
+  if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'){el.readOnly=ro;if('disabled' in el&&el.type==='checkbox')el.disabled=ro;}
+ });
+ const reset=$('reset');if(reset)reset.hidden=ro;
+}
 /* save(): chamado em toda alteração; agrupa em um PUT .../state após 300 ms de silêncio. */
 function save(){
- if(!ready||!curPid)return;
+ if(isPatientReadonly()||!ready||!curPid)return;
  dirty=true;setSS('Salvando na conta…');
  clearTimeout(saveT);saveT=setTimeout(()=>{flush().catch(()=>{});},300);}
 function flush(){
+ if(isPatientReadonly()){dirty=false;return Promise.resolve();}
  clearTimeout(saveT);saveT=null;
  const run=async()=>{
   if(!dirty||!curPid)return;
   dirty=false;const pid=curPid,name=curName();
   try{await Api.putState(pid,JSON.parse(JSON.stringify(S)));if(!dirty)setSS('Salvo na conta · paciente: '+name);}
   catch(e){
-   if(e.status===401)return;
+   if(e.status===401||e.status===403)return;
    dirty=true;setSS('Não consegui salvar ('+e.message+'). Vou tentar de novo…');
    clearTimeout(retryT);retryT=setTimeout(()=>{flush().catch(()=>{});},5000);throw e;}};
  inflight=(inflight||Promise.resolve()).catch(()=>{}).then(run);
@@ -522,16 +533,17 @@ document.getElementById('panels').innerHTML=inicio+HEROES.map(heroPanel).join(''
 function show(id){
  TABS.forEach(t=>{const on=t.id===id;document.getElementById('t-'+t.id).setAttribute('aria-selected',on);document.getElementById('p-'+t.id).hidden=!on;});
  if(id==='resumo')renderSummary(); if(id==='VAI')renderDir();
- if(S.tab!==id){S.tab=id;save();}
+ if(S.tab!==id){S.tab=id;if(!isPatientReadonly())save();}
  try{history.replaceState(null,'','#'+id);}catch(e){}
+ syncReadonlyUi();
 }
 document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){show(b.dataset.tab);}});
 document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){show(g.dataset.go);window.scrollTo({top:0});}});
 
 /* fields */
 document.querySelectorAll('[data-f]').forEach(el=>{
- const k=el.dataset.f; if(el.type==='checkbox'){el.checked=!!S.f[k];el.addEventListener('change',()=>{S.f[k]=el.checked;save();});return;}
- el.value=S.f[k]||''; el.addEventListener('input',()=>{S.f[k]=el.value;save(); if(k==='de-pens')renderDE(S.deMode);});
+ const k=el.dataset.f; if(el.type==='checkbox'){el.checked=!!S.f[k];el.addEventListener('change',()=>{if(blockReadonly()){el.checked=!!S.f[k];return;}S.f[k]=el.checked;save();});return;}
+ el.value=S.f[k]||''; el.addEventListener('input',()=>{if(blockReadonly()){el.value=S.f[k]||'';return;}S.f[k]=el.value;save(); if(k==='de-pens')renderDE(S.deMode);});
 });
 
 /* cards */
@@ -539,12 +551,12 @@ function renderCounts(){HEROES.forEach(h=>{const n=(CARDS[h.id]||[]).filter(c=>S
  document.getElementById('cnt-'+h.id).textContent=`${n} de ${t} feitas`;document.getElementById('prog-'+h.id).textContent=n?`${n} cartas feitas`:`${t} cartas`;});}
 function paintGot(){document.querySelectorAll('[data-got]').forEach(b=>{const on=!!S.got[b.dataset.got];b.closest('.card').classList.toggle('got',on);b.setAttribute('aria-pressed',on);b.textContent=on?'Feita ✓':'Fiz!';});}
 document.querySelectorAll('[data-got]').forEach(b=>{const id=b.dataset.got;
- b.addEventListener('click',()=>{S.got[id]=!S.got[id];if(!S.got[id])delete S.got[id];save();paintGot();renderCounts();});});
+ b.addEventListener('click',()=>{if(blockReadonly())return;S.got[id]=!S.got[id];if(!S.got[id])delete S.got[id];save();paintGot();renderCounts();});});
 paintGot();renderCounts();
 
 /* body map */
 function paintBody(){document.querySelectorAll('[data-p]').forEach(p=>p.classList.toggle('on',S.body.includes(p.dataset.p)));document.querySelectorAll('[data-body]').forEach(c=>c.setAttribute('aria-pressed',S.body.includes(c.dataset.body)));}
-function toggleBody(k){S.body=S.body.includes(k)?S.body.filter(x=>x!==k):[...S.body,k];save();paintBody();}
+function toggleBody(k){if(blockReadonly())return;S.body=S.body.includes(k)?S.body.filter(x=>x!==k):[...S.body,k];save();paintBody();}
 document.querySelectorAll('[data-p]').forEach(p=>p.addEventListener('click',()=>toggleBody(p.dataset.p)));
 document.querySelectorAll('[data-body]').forEach(c=>c.addEventListener('click',()=>toggleBody(c.dataset.body)));
 paintBody();
@@ -552,13 +564,14 @@ paintBody();
 /* viewer */
 const V={list:[],i:0,side:'front'};
 const vEl=document.getElementById('viewer'),vBig=document.getElementById('vbig');
-function vRender(){const c=V.list[V.i];const hero=c.id.split('-')[0].replace('DEX','DE');const fr=`border-image-source:url(img/versos/${hero}.webp)`;
- if(V.side==='front'){vBig.innerHTML=`<div class="face front" style="${fr}"><img src="${c.img}" alt="Carta ${c.id}: ${esc(c.t)}"></div>`;}
+function vFit(){const sc=document.getElementById('vsc');if(!sc)return;let f=16;sc.style.fontSize=f+'px';while(sc.scrollHeight>sc.clientHeight+1&&f>10.5){f-=0.5;sc.style.fontSize=f+'px';}}
+function vRender(){const c=V.list[V.i];const hero=c.id.split('-')[0].replace('DEX','DE');
+ if(V.side==='front'){vBig.innerHTML=`<div class="face front" style="background-image:url(img/frentes/${hero}.webp)"><img src="${c.img}" alt="Carta ${c.lab||c.id}: ${esc(c.t)}"></div>`;}
  else{const body=c.v?`${c.v[0]?`<span class="ab">${esc(c.v[0])}</span>`:''}<span class="lab">Experimente</span><span class="ex">${esc(c.v[1])}</span><span class="q">${esc(c.v[2])}</span>`:'<span class="pend">Verso em revisão.</span>';
-  vBig.innerHTML=`<div class="face back" style="${fr}"><div class="sc" id="vsc"><span class="id">${c.lab||c.id}${c.draft?' · rascunho':''}</span><h4>${esc(c.t)}</h4>${body}</div></div>`;
-  const sc=document.getElementById('vsc');const upd=()=>sc.classList.toggle('more',sc.scrollTop+sc.clientHeight<sc.scrollHeight-6);upd();sc.addEventListener('scroll',upd);}
+  vBig.innerHTML=`<div class="face back" style="border-image-source:url(img/versos/${hero}.webp)"><div class="sc" id="vsc"><h4>${esc(c.t)}</h4>${body}</div></div>`;vFit();}
  document.getElementById('vflip').textContent=V.side==='front'?'Ver verso':'Ver frente';
  document.getElementById('vpos').textContent=`${V.i+1} / ${V.list.length}`;}
+window.addEventListener('resize',()=>{if(!vEl.hidden&&V.side==='back')vFit();});
 function vOpen(id,side){const hero=id.split('-')[0].replace('DEX','DE');V.list=(CARDS[hero]||[]).filter(c=>c.img);V.i=V.list.findIndex(c=>c.id===id);V.side=side;vEl.hidden=false;document.body.style.overflow='hidden';vRender();document.getElementById('vflip').focus();}
 function vClose(){vEl.hidden=true;document.body.style.overflow='';}
 document.addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o)vOpen(o.dataset.open,o.dataset.side);});
@@ -575,14 +588,14 @@ vBig.addEventListener('touchend',e=>{if(tx==null)return;const dx=e.changedTouche
 /* values */
 function paintVals(){document.querySelectorAll('[data-val]').forEach(c=>c.setAttribute('aria-pressed',S.vals.includes(c.dataset.val)));
  document.getElementById('valcount').textContent=S.vals.length?`Minha bússola aponta para: ${S.vals.join(', ')}`:'Nenhuma palavra escolhida ainda.';}
-document.querySelectorAll('[data-val]').forEach(c=>c.addEventListener('click',()=>{const v=c.dataset.val;
+document.querySelectorAll('[data-val]').forEach(c=>c.addEventListener('click',()=>{if(blockReadonly())return;const v=c.dataset.val;
  if(S.vals.includes(v))S.vals=S.vals.filter(x=>x!==v);else if(S.vals.length<3)S.vals=[...S.vals,v];else{document.getElementById('valcount').textContent='Já tem 3 palavras. Tire uma para trocar.';return;}save();paintVals();}));
 paintVals();
 function renderDir(){document.getElementById('vai-dir').textContent=S.vals.length?`Sua bússola aponta para: ${S.vals.join(', ')}.`:'Dica: escolha suas palavras na missão do VAL primeiro.';}
 
 /* thermometer */
 function paintTh(){document.querySelectorAll('[data-t]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.t===S.th));}
-document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{S.th=+b.dataset.t===S.th?0:+b.dataset.t;save();paintTh();}));paintTh();
+document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{if(blockReadonly())return;S.th=+b.dataset.t===S.th?0:+b.dataset.t;save();paintTh();}));paintTh();
 
 /* DE machine */
 function renderDE(m){const scr=document.getElementById('de-screen');const t=(S.f['de-pens']||'').trim();scr.className='screen';
@@ -596,7 +609,7 @@ function renderDE(m){const scr=document.getElementById('de-screen');const t=(S.f
  if(m==='obrigado')out='Obrigado, mente, por "'+t+'". Agora eu escolho o que fazer.';
  scr.textContent=out;}
 function paintDEBtns(){document.querySelectorAll('#de-btns [data-m]').forEach(x=>x.classList.toggle('ghost',x.dataset.m!==(S.deMode||'tendo')));}
-document.getElementById('de-btns').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;S.deMode=b.dataset.m;save();
+document.getElementById('de-btns').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b||blockReadonly())return;S.deMode=b.dataset.m;save();
  paintDEBtns();renderDE(b.dataset.m);});
 renderDE(S.deMode);
 
@@ -618,9 +631,9 @@ function renderSummary(){let o='ACT SQUAD · Minhas missões\n\n';
 document.getElementById('copy').addEventListener('click',()=>{const t=document.getElementById('summary').textContent,m=document.getElementById('copy-msg');
  const sel=()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('summary'));const s=getSelection();s.removeAllRanges();s.addRange(r);m.textContent='Texto selecionado. Use copiar do seu aparelho.';};
  try{navigator.clipboard.writeText(t).then(()=>m.textContent='Resumo copiado.',sel);}catch(e){sel();}});
-document.getElementById('reset').addEventListener('click',()=>document.getElementById('confirm').hidden=false);
+document.getElementById('reset').addEventListener('click',()=>{if(blockReadonly())return;document.getElementById('confirm').hidden=false;});
 document.getElementById('reset-no').addEventListener('click',()=>document.getElementById('confirm').hidden=true);
-document.getElementById('reset-yes').addEventListener('click',()=>{S=normalize({tab:S.tab});save();
+document.getElementById('reset-yes').addEventListener('click',()=>{if(blockReadonly())return;S=normalize({tab:S.tab});save();
  applyState();document.getElementById('confirm').hidden=true;});
 
 /* repinta toda a UI a partir de S (usado ao abrir paciente, ao zerar e ao sair) */
@@ -635,7 +648,11 @@ let phase='boot';   /* boot | auth | terms | app */
 let TERMS=null,authMode='login',editId=null,delId=null;
 const show$=(id,on)=>{$(id).hidden=!on;};
 const fmtDate=s=>{try{return new Date(s).toLocaleDateString('pt-BR');}catch(e){return '';}};
-const errTxt=e=>(e&&e.message)||'Algo deu errado. Tente de novo.';
+const errTxt=e=>{
+ const m=(e&&e.message)||'';
+ if(!m||/^(Forbidden|Access Denied|Erro 403)$/i.test(m.trim()))return 'Sua sessão expirou. Entre de novo.';
+ return m;
+};
 function flash(id,msg){const el=$(id);el.textContent=msg||'';el.hidden=!msg;}
 
 $('authBadges').innerHTML=HEROES.map(h=>badge(h.id)).join('');
@@ -644,8 +661,14 @@ function setAuthMode(m){
  authMode=m;const reg=m==='register';
  $('authTabLogin').setAttribute('aria-selected',!reg);$('authTabReg').setAttribute('aria-selected',reg);
  $('authTitle').textContent=reg?'Criar conta':'Entrar';
- $('authLede').textContent=reg?'Crie sua conta para guardar o caderno de cada paciente com segurança.':'Use seu e-mail e senha para abrir o caderno e os pacientes da sua conta.';
+ $('authLede').textContent=reg?'Crie sua conta para guardar o caderno de cada paciente com segurança.':'Terapeuta: e-mail e senha. Paciente: nome e CPF.';
  show$('authNameWrap',reg);show$('authPassHint',reg);
+ $('authLoginLabel').textContent=reg?'E-mail':'E-mail ou nome';
+ $('authEmail').type=reg?'email':'text';
+ $('authEmail').placeholder='voce@exemplo.com';
+ $('authPassLabel').textContent=reg?'Senha':'Senha ou CPF';
+ $('authPass').placeholder=reg?'Mínimo de 8 caracteres':'Senha ou CPF';
+ $('authPass').minLength=reg?8:0;
  $('authPass').autocomplete=reg?'new-password':'current-password';
  $('authSubmit').textContent=reg?'Criar conta':'Entrar';
  flash('authErr','');}
@@ -663,8 +686,9 @@ function showWrap(){document.documentElement.classList.remove('booting');show$('
 
 function renderPbar(){
  const inApp=phase==='app';
+ const ro=isPatientReadonly();
  show$('pbar',phase==='app'||phase==='terms');
- show$('pacSelWrap',inApp);show$('lnkPac',inApp);show$('lnkConta',inApp);
+ show$('pacSelWrap',inApp&&!ro);show$('lnkPac',inApp&&!ro);show$('lnkConta',inApp);
  const sel=$('pacSel');
  sel.innerHTML=PATS.map(p=>`<option value="${esc(p.id)}">${esc(p.displayName)}${p.isDefault?' (padrão)':''}</option>`).join('');
  if(curPid)sel.value=curPid;
@@ -690,9 +714,11 @@ function route(){
  if(phase==='auth'){showAuth($('authErr').hidden?'':$('authErr').textContent);return;}
  showWrap();
  if(phase==='terms'){showPac('termos');return;}
+ if(h==='pacientes'&&isPatientReadonly()){location.hash='#'+(S.tab&&TABS.some(t=>t.id===S.tab)?S.tab:'inicio');return;}
  if(h==='pacientes'||h==='conta'||h==='termos'){showPac(h);return;}
  hidePac();
- show(TABS.some(t=>t.id===h)?h:(S.tab&&TABS.some(t=>t.id===S.tab)?S.tab:'inicio'));}
+ show(TABS.some(t=>t.id===h)?h:(S.tab&&TABS.some(t=>t.id===S.tab)?S.tab:'inicio'));
+ syncReadonlyUi();}
 window.addEventListener('hashchange',route);
 
 /* termos */
@@ -714,14 +740,22 @@ $('termsBtn').addEventListener('click',async()=>{
 /* conta */
 function renderConta(){
  const u=Api.user||{};
- $('contaKv').innerHTML=`<dt>Nome</dt><dd>${esc(u.name||'—')}</dd><dt>E-mail</dt><dd>${esc(u.email||'')}</dd><dt>Termos</dt><dd>${TERMS&&TERMS.accepted?`Versão ${esc(TERMS.currentVersion)}, aceitos em ${esc(fmtDate(TERMS.acceptedAt))}`:'Ainda não aceitos'}</dd><dt>Pacientes</dt><dd>${PATS.length}</dd>`;}
+ const who=u.role==='patient'?(u.displayName||u.name||'Paciente'):(u.name||'—');
+ const email=u.role==='patient'?'— (conta paciente)':(u.email||'');
+ const role=u.role==='patient'?'Paciente · somente leitura':(u.role||'—');
+ $('contaKv').innerHTML=`<dt>Nome</dt><dd>${esc(who)}</dd><dt>E-mail</dt><dd>${esc(email)}</dd><dt>Perfil</dt><dd>${esc(role)}</dd><dt>Termos</dt><dd>${u.role==='patient'?'Não se aplica':(TERMS&&TERMS.accepted?`Versão ${esc(TERMS.currentVersion)}, aceitos em ${esc(fmtDate(TERMS.acceptedAt))}`:'Ainda não aceitos')}</dd><dt>Pacientes</dt><dd>${u.role==='patient'?'1 (o seu)':PATS.length}</dd>`;}
 
 /* pacientes */
 function pickPatient(){
  let id=null;try{id=localStorage.getItem(PAC_KEY);}catch(e){}
  const p=PATS.find(x=>x.id===id)||PATS.find(x=>x.isDefault)||PATS[0];
  return p&&p.id;}
-async function loadPatients(){PATS=await Api.listPatients()||[];}
+async function loadPatients(){
+ if(isPatientReadonly()&&Api.user&&Api.user.patientId){
+  const full=await Api.getPatient(Api.user.patientId);
+  PATS=[full];return;
+ }
+ PATS=await Api.listPatients()||[];}
 async function openPatient(id){
  if(!id)throw new Error('Nenhum paciente encontrado.');
  await flush();                       /* garante que o paciente anterior foi gravado */
@@ -729,7 +763,8 @@ async function openPatient(id){
  let st;try{st=await Api.getState(id);}catch(e){ready=was&&!!curPid;throw e;}
  curPid=id;try{localStorage.setItem(PAC_KEY,id);}catch(e){}
  S=normalize(st);applyState();dirty=false;ready=true;
- setSS('Salvo na conta · paciente: '+curName());renderPbar();}
+ setSS((isPatientReadonly()?'Somente leitura · ':'Salvo na conta · ')+'paciente: '+curName());
+ renderPbar();syncReadonlyUi();}
 $('pacSel').addEventListener('change',async()=>{
  const sel=$('pacSel'),id=sel.value,prev=curPid;if(id===prev)return;
  $('pbar').classList.add('busy');
@@ -742,7 +777,18 @@ function patItem(p){
  if(editId===p.id)return `<li class="pitem${cur?' cur':''}"><form class="stack" data-edit="${esc(p.id)}"><div class="row2"><label class="field"><b>Nome ou apelido</b><input class="inp" type="text" name="n" maxlength="60" required value="${esc(p.displayName)}"></label><label class="field"><b>Observação</b><input class="inp" type="text" name="o" maxlength="120" value="${esc(p.note||'')}"></label></div><div class="actions"><button class="btn sm" type="submit">Salvar</button><button class="btn sm ghost" type="button" data-act="edit-no">Cancelar</button></div></form></li>`;
  const del=delId===p.id?`<div class="confirm"><span>Excluir ${esc(p.displayName)} e todas as respostas? Não dá para desfazer.</span><button class="btn sm danger" type="button" data-act="del-yes" data-id="${esc(p.id)}">Sim, excluir</button><button class="btn sm ghost" type="button" data-act="del-no">Cancelar</button></div>`:'';
  return `<li class="pitem${cur?' cur':''}" data-id="${esc(p.id)}"><div class="ph"><span class="pn">${esc(p.displayName)}</span>${p.isDefault?'<span class="tag">padrão</span>':''}${cur?'<span class="tag on">aberto</span>':''}</div>${p.note?`<span class="pnote">${esc(p.note)}</span>`:''}<div class="actions"><button class="btn sm" type="button" data-act="open" data-id="${esc(p.id)}">${cur?'Voltar ao caderno':'Abrir caderno'}</button><button class="btn sm ghost" type="button" data-act="edit" data-id="${esc(p.id)}">Editar</button><button class="btn sm danger" type="button" data-act="del" data-id="${esc(p.id)}"${PATS.length<2?' disabled title="Crie outro paciente antes de excluir este"':''}>Excluir</button></div>${del}</li>`;}
-function renderPats(){$('patList').innerHTML=PATS.map(patItem).join('');}
+function renderPats(){
+ show$('patForm',!isPatientReadonly());
+ $('patList').innerHTML=PATS.map(patItem).join('');
+}
+function formatCpfInput(v){
+ const d=(v||'').replace(/\D/g,'').slice(0,11);
+ if(d.length<=3)return d;
+ if(d.length<=6)return d.slice(0,3)+'.'+d.slice(3);
+ if(d.length<=9)return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);
+ return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);
+}
+$('patCpf').addEventListener('input',e=>{e.target.value=formatCpfInput(e.target.value);});
 
 $('patList').addEventListener('click',async e=>{
  const b=e.target.closest('[data-act]');if(!b)return;
@@ -769,10 +815,12 @@ $('patList').addEventListener('submit',async e=>{
  try{await Api.updatePatient(f.dataset.edit,{displayName:name,note:f.o.value.trim()});editId=null;await loadPatients();renderPbar();renderPats();flash('patErr','');}
  catch(err){flash('patErr',errTxt(err));}});
 $('patForm').addEventListener('submit',async e=>{
- e.preventDefault();const name=$('patName').value.trim();
+ e.preventDefault();if(isPatientReadonly()){flash('patErr','Conta somente leitura');return;}
+ const name=$('patName').value.trim();const cpf=$('patCpf').value.trim();
  if(!name){flash('patErr','Dê um nome ou apelido ao paciente.');$('patName').focus();return;}
+ if(!cpf||cpf.replace(/\D/g,'').length!==11){flash('patErr','Informe um CPF com 11 dígitos.');$('patCpf').focus();return;}
  const b=$('patAdd');b.disabled=true;flash('patErr','');
- try{await Api.createPatient(name,$('patNote').value.trim());$('patName').value='';$('patNote').value='';await loadPatients();renderPbar();renderPats();}
+ try{await Api.createPatient(name,cpf,$('patNote').value.trim());$('patName').value='';$('patCpf').value='';$('patNote').value='';await loadPatients();renderPbar();renderPats();}
  catch(err){flash('patErr',errTxt(err));}
  finally{b.disabled=false;}});
 $('btnVoltar').addEventListener('click',()=>{location.hash='#'+(S.tab&&TABS.some(t=>t.id===S.tab)?S.tab:'inicio');});
@@ -780,6 +828,13 @@ $('btnVoltar').addEventListener('click',()=>{location.hash='#'+(S.tab&&TABS.some
 /* login / cadastro */
 async function enterApp(){
  try{localStorage.removeItem(KEY);}catch(e){}      /* o caderno antigo (act-squad-v1) deixa de existir no aparelho */
+ if(isPatientReadonly()){
+  TERMS={accepted:true,currentVersion:'—'};
+  await loadPatients();
+  const pid=(Api.user&&Api.user.patientId)||pickPatient();
+  await openPatient(pid);
+  phase='app';route();return;
+ }
  TERMS=await Api.termsStatus();
  await loadPatients();
  if(!TERMS.accepted){phase='terms';route();return;}
@@ -788,7 +843,7 @@ async function enterApp(){
 $('authForm').addEventListener('submit',async e=>{
  e.preventDefault();flash('authErr','');
  const email=$('authEmail').value.trim(),pass=$('authPass').value,name=$('authName').value.trim();
- if(!email||!pass){flash('authErr','Preencha e-mail e senha.');return;}
+ if(!email||!pass){flash('authErr',authMode==='register'?'Preencha e-mail e senha.':'Preencha e-mail/nome e senha/CPF.');return;}
  if(authMode==='register'&&pass.length<8){flash('authErr','A senha precisa ter pelo menos 8 caracteres.');return;}
  const b=$('authSubmit');b.disabled=true;
  try{
@@ -797,7 +852,11 @@ $('authForm').addEventListener('submit',async e=>{
   Api.saveSession(r.token,r.user);
   $('authPass').value='';
   await enterApp();
- }catch(err){flash('authErr',errTxt(err));}
+ }catch(err){
+  /* Se o login até salvou token mas enterApp falhou, não deixe sessão zumbi na tela de login. */
+  if(phase!=='app'&&phase!=='terms')Api.clearSession();
+  flash('authErr',errTxt(err));
+ }
  finally{b.disabled=false;}});
 
 async function logout(){
@@ -809,7 +868,7 @@ window.addEventListener('actsquad:unauthorized',()=>{if(phase!=='auth'&&phase!==
 
 /* não perder alterações ao fechar ou esconder a aba */
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&dirty&&ready)flush().catch(()=>{});});
-window.addEventListener('pagehide',()=>{if(dirty&&ready&&curPid){try{Api.putState(curPid,S,{keepalive:true}).catch(()=>{});}catch(e){}}});
+window.addEventListener('pagehide',()=>{if(!isPatientReadonly()&&dirty&&ready&&curPid){try{Api.putState(curPid,S,{keepalive:true}).catch(()=>{});}catch(e){}}});
 
 /* boot: sem sessão só o login aparece; com sessão valida /me, termos, pacientes e estado */
 (async function boot(){
@@ -818,8 +877,9 @@ window.addEventListener('pagehide',()=>{if(dirty&&ready&&curPid){try{Api.putStat
   const me=await Api.me();Api.saveSession(Api.token,me);
   await enterApp();
  }catch(e){
-  if(!Api.loggedIn())showAuth('Sua sessão expirou. Entre de novo.');
-  else showAuth(errTxt(e));}})();
+  Api.clearSession();
+  showAuth('Sua sessão expirou. Entre de novo.');
+ }})();
 })();
 </script>
 

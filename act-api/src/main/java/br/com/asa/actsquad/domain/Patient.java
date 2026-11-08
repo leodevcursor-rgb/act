@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
@@ -32,6 +33,13 @@ public class Patient {
 
   @Column(name = "is_default", nullable = false)
   private boolean isDefault = false;
+
+  @Column(name = "cpf_digits", length = 11)
+  private String cpfDigits;
+
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "account_user_id")
+  private AppUser accountUser;
 
   @Column(name = "created_at", nullable = false)
   private Instant createdAt = Instant.now();
@@ -80,6 +88,22 @@ public class Patient {
 
   public void setDefault(boolean isDefault) {
     this.isDefault = isDefault;
+  }
+
+  public String getCpfDigits() {
+    return cpfDigits;
+  }
+
+  public void setCpfDigits(String cpfDigits) {
+    this.cpfDigits = cpfDigits;
+  }
+
+  public AppUser getAccountUser() {
+    return accountUser;
+  }
+
+  public void setAccountUser(AppUser accountUser) {
+    this.accountUser = accountUser;
   }
 
   public Instant getCreatedAt() {

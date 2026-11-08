@@ -1,16 +1,25 @@
 package br.com.asa.actsquad.config;
 
 import br.com.asa.actsquad.security.JwtAuthFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -35,8 +44,8 @@ public class SecurityConfig {
   }
 
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter)
-      throws Exception {
+  SecurityFilterChain securityFilterChain(
+      HttpSecurity http, JwtAuthFilter jwtAuthFilter, ObjectMapper objectMapper) throws Exception {
     http.csrf(csrf -> csrf.disable())
         .cors(Customizer.withDefaults())
         .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -50,8 +59,54 @@ public class SecurityConfig {
                     .authenticated()
                     .anyRequest()
                     .permitAll())
+        /* Sem JWT válido o Spring trata como anônimo e por padrão responde 403 "Forbidden".
+        Na tela de login isso aparece cru; trocamos por 401 com mensagem clara. */
+        .exceptionHandling(
+            ex ->
+                ex.authenticationEntryPoint(
+                        (request, response, authException) ->
+                            writeAuthJson(
+                                response,
+                                objectMapper,
+                                HttpServletResponse.SC_UNAUTHORIZED,
+                                "Sua sessão expirou. Entre de novo."))
+                    .accessDeniedHandler(
+                        (request, response, accessDeniedException) -> {
+                          Authentication auth =
+                              SecurityContextHolder.getContext().getAuthentication();
+                          boolean anonymous =
+                              auth == null
+                                  || !auth.isAuthenticated()
+                                  || auth instanceof AnonymousAuthenticationToken;
+                          if (anonymous) {
+                            writeAuthJson(
+                                response,
+                                objectMapper,
+                                HttpServletResponse.SC_UNAUTHORIZED,
+                                "Sua sessão expirou. Entre de novo.");
+                            return;
+                          }
+                          String msg = accessDeniedException.getMessage();
+                          if (msg == null || msg.isBlank() || "Access Denied".equalsIgnoreCase(msg)) {
+                            msg = "Acesso negado";
+                          }
+                          writeAuthJson(
+                              response, objectMapper, HttpServletResponse.SC_FORBIDDEN, msg);
+                        }))
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
+  }
+
+  private static void writeAuthJson(
+      HttpServletResponse response, ObjectMapper objectMapper, int status, String message)
+      throws java.io.IOException {
+    response.setStatus(status);
+    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("status", status);
+    body.put("error", message);
+    objectMapper.writeValue(response.getWriter(), body);
   }
 
   @Bean

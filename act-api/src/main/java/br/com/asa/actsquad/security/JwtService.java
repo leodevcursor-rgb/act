@@ -28,14 +28,22 @@ public class JwtService {
   public String generateToken(UserPrincipal principal) {
     Date now = new Date();
     Date exp = new Date(now.getTime() + properties.getExpirationMs());
-    return Jwts.builder()
-        .subject(principal.getId().toString())
-        .claim("email", principal.getUsername())
-        .claim("role", principal.getRole().name())
-        .issuedAt(now)
-        .expiration(exp)
-        .signWith(key)
-        .compact();
+    var builder =
+        Jwts.builder()
+            .subject(principal.getId().toString())
+            .claim("email", principal.getUsername())
+            .claim("role", principal.getRole().name())
+            .issuedAt(now)
+            .expiration(exp);
+    if (principal.getPatientId() != null) {
+      builder.claim("patientId", principal.getPatientId().toString());
+    }
+    return builder.signWith(key).compact();
+  }
+
+  public UUID parsePatientId(String token) {
+    String raw = parseClaims(token).get("patientId", String.class);
+    return raw == null || raw.isBlank() ? null : UUID.fromString(raw);
   }
 
   public UUID parseUserId(String token) {

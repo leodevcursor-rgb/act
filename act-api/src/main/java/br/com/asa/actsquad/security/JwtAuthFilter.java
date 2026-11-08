@@ -1,6 +1,8 @@
 package br.com.asa.actsquad.security;
 
+import br.com.asa.actsquad.domain.UserRole;
 import br.com.asa.actsquad.repo.AppUserRepository;
+import br.com.asa.actsquad.repo.PatientRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,10 +21,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
   private final AppUserRepository userRepository;
+  private final PatientRepository patientRepository;
 
-  public JwtAuthFilter(JwtService jwtService, AppUserRepository userRepository) {
+  public JwtAuthFilter(
+      JwtService jwtService,
+      AppUserRepository userRepository,
+      PatientRepository patientRepository) {
     this.jwtService = jwtService;
     this.userRepository = userRepository;
+    this.patientRepository = patientRepository;
   }
 
   @Override
@@ -41,7 +48,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             .filter(u -> u.isActive())
             .ifPresent(
                 user -> {
-                  UserPrincipal principal = UserPrincipal.from(user);
+                  UUID patientId = null;
+                  if (user.getRole() == UserRole.patient) {
+                    patientId =
+                        patientRepository
+                            .findByAccountUserId(user.getId())
+                            .map(p -> p.getId())
+                            .orElse(jwtService.parsePatientId(token));
+                  }
+                  UserPrincipal principal = UserPrincipal.from(user, patientId);
                   var auth =
                       new UsernamePasswordAuthenticationToken(
                           principal, null, principal.getAuthorities());

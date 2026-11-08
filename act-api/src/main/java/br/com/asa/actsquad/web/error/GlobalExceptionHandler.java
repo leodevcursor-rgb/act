@@ -31,7 +31,11 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<Map<String, Object>> handleAccess(AccessDeniedException ex) {
-    return body(HttpStatus.FORBIDDEN, ex.getMessage());
+    String msg = ex.getMessage();
+    if (msg == null || msg.isBlank() || "Access Denied".equalsIgnoreCase(msg) || "Forbidden".equalsIgnoreCase(msg)) {
+      msg = "Acesso negado";
+    }
+    return body(HttpStatus.FORBIDDEN, msg);
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)

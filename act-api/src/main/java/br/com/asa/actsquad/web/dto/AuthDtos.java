@@ -15,10 +15,17 @@ public final class AuthDtos {
       @NotBlank @Size(min = 8, max = 100) String password,
       @Size(max = 120) String name) {}
 
-  public record LoginRequest(@NotBlank @Email String email, @NotBlank String password) {}
+  /** Terapeuta: e-mail + senha. Paciente: nome + CPF (campo password). */
+  public record LoginRequest(@NotBlank String email, @NotBlank String password) {}
 
   public record AuthResponse(String token, UserResponse user) {}
 
   public record UserResponse(
-      UUID id, String email, String name, UserRole role, boolean termsAccepted) {}
+      UUID id,
+      String email,
+      String name,
+      UserRole role,
+      boolean termsAccepted,
+      UUID patientId,
+      String displayName) {}
 }

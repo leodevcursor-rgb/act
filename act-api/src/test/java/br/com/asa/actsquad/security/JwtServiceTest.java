@@ -18,7 +18,7 @@ class JwtServiceTest {
     JwtService service = new JwtService(props);
 
     UUID id = UUID.randomUUID();
-    UserPrincipal principal = new UserPrincipal(id, "a@b.com", "x", UserRole.therapist, true);
+    UserPrincipal principal = new UserPrincipal(id, "a@b.com", "x", UserRole.therapist, true, null);
     String token = service.generateToken(principal);
 
     assertTrue(service.isValid(token));

@@ -1,5 +1,8 @@
 .env
 **/.env
+SECRETS.local.md
+*.local.md
+*.local.txt
 act-api/target/
 target/
 .idea/

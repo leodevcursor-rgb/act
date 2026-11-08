@@ -103,13 +103,20 @@
         data = { error: text };
       }
       if (!res.ok) {
-        if (res.status === 401 && this.token) {
+        const msg = (data && (data.error || data.message)) || "Erro " + res.status;
+        /* 401 = sessão inválida. 403 genérico "Forbidden" também costuma ser JWT ausente/inválido
+           (Spring Security anônimo) — limpa a sessão para não prender a tela de login. */
+        const authGone =
+          res.status === 401 ||
+          (res.status === 403 &&
+            /^(Forbidden|Access Denied)$/i.test(String(msg).trim()));
+        if (authGone && this.token) {
           this.clearSession();
           try {
             global.dispatchEvent(new CustomEvent("actsquad:unauthorized"));
           } catch (e) {}
         }
-        const err = new Error((data && (data.error || data.message)) || "Erro " + res.status);
+        const err = new Error(msg);
         err.status = res.status;
         err.data = data;
         throw err;
@@ -151,8 +158,8 @@
     listPatients() {
       return this.get("/api/v1/patients");
     },
-    createPatient(displayName, note) {
-      return this.post("/api/v1/patients", { displayName, note: note || null });
+    createPatient(displayName, cpf, note) {
+      return this.post("/api/v1/patients", { displayName, cpf, note: note || null });
     },
     getPatient(id) {
       return this.get("/api/v1/patients/" + id);
